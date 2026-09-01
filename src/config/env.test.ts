@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { validateClientEnv, validateServerEnv } from "@/config/env";
+import {
+  validateAuthEnv,
+  validateClientEnv,
+  validateDatabaseEnv,
+  validateServerEnv,
+} from "@/config/env";
 
 const validEnv = {
   DATABASE_URL: "postgresql://user:password@example.neon.tech/groups",
@@ -21,6 +26,23 @@ describe("environment validation", () => {
 
   it("validates the public client configuration separately", () => {
     expect(validateClientEnv(validEnv)).toEqual({
+      NEXT_PUBLIC_APP_URL: validEnv.NEXT_PUBLIC_APP_URL,
+    });
+  });
+
+  it("validates database tooling without requiring unrelated secrets", () => {
+    expect(
+      validateDatabaseEnv({ DATABASE_URL: "postgresql://localhost/groups" }),
+    ).toEqual({ DATABASE_URL: "postgresql://localhost/groups" });
+  });
+
+  it("validates auth configuration without requiring unrelated integrations", () => {
+    expect(validateAuthEnv(validEnv)).toEqual({
+      DATABASE_URL: validEnv.DATABASE_URL,
+      BETTER_AUTH_SECRET: validEnv.BETTER_AUTH_SECRET,
+      BETTER_AUTH_URL: validEnv.BETTER_AUTH_URL,
+      GOOGLE_CLIENT_ID: validEnv.GOOGLE_CLIENT_ID,
+      GOOGLE_CLIENT_SECRET: validEnv.GOOGLE_CLIENT_SECRET,
       NEXT_PUBLIC_APP_URL: validEnv.NEXT_PUBLIC_APP_URL,
     });
   });

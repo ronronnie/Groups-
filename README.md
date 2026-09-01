@@ -58,3 +58,16 @@ Planned testing:
 - Playwright
 
 Do not introduce Supabase or Firebase.
+
+## Database Development
+
+The PostgreSQL schema is defined under `src/server/db/schema` and managed with Drizzle Kit.
+
+```bash
+npm run db:check
+npm run db:generate
+npm run db:migrate
+npm run db:seed
+```
+
+`db:migrate` and `db:seed` require a valid `DATABASE_URL`. Seed records are fictional and use reserved `example.test` identities and URLs.

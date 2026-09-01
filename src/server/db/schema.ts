@@ -1,10 +1,10 @@
-import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
-
-export const groups = pgTable("groups", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  name: text("name").notNull(),
-  engineId: text("engine_id").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
+export * from "@/server/db/schema/applications";
+export * from "@/server/db/schema/auth";
+export * from "@/server/db/schema/communications";
+export * from "@/server/db/schema/groups";
+export * from "@/server/db/schema/jobs";
+export * from "@/server/db/schema/outcomes";
+export * from "@/server/db/schema/profiles";
+export * from "@/server/db/schema/referrals";
+export * from "@/server/db/schema/reputation";
+export * from "@/server/db/schema/system";

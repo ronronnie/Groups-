@@ -1,10 +1,14 @@
+import "server-only";
+
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { getServerEnv } from "@/config/env.server";
+import { validateDatabaseEnv } from "@/config/env";
 import * as schema from "@/server/db/schema";
 
-export function createDatabase(databaseUrl = getServerEnv().DATABASE_URL) {
+export function createDatabase(
+  databaseUrl = validateDatabaseEnv(process.env).DATABASE_URL,
+) {
   const sql = neon(databaseUrl);
 
-  return drizzle(sql, { schema });
+  return drizzle({ client: sql, schema });
 }

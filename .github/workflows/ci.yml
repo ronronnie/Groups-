@@ -32,6 +32,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Check database migrations
+        run: npm run db:check
+
       - name: Lint
         run: npm run lint
 

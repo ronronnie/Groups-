@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1788266689303,
+      "tag": "0000_enable_vector",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788266700719,
+      "tag": "0001_initial_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788266733937,
+      "tag": "0002_fix_message_reply_delete",
+      "breakpoints": true
+    }
+  ]
+}

@@ -6,6 +6,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "db:check": "drizzle-kit check",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed": "tsx scripts/seed.ts",
+    "db:studio": "drizzle-kit studio",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -14,12 +19,17 @@
     "format:write": "prettier --write . --ignore-unknown"
   },
   "dependencies": {
+    "@better-auth/drizzle-adapter": "1.7.2",
     "@neondatabase/serverless": "latest",
+    "@radix-ui/react-avatar": "^1.2.6",
+    "@radix-ui/react-dialog": "^1.1.23",
     "@radix-ui/react-slot": "latest",
+    "@radix-ui/react-tooltip": "^1.2.16",
     "ably": "latest",
     "better-auth": "latest",
     "class-variance-authority": "latest",
     "clsx": "latest",
+    "cmdk": "^1.1.1",
     "drizzle-orm": "latest",
     "lucide-react": "latest",
     "motion": "latest",
@@ -29,10 +39,13 @@
     "react-dom": "19.2.8",
     "react-hook-form": "latest",
     "server-only": "latest",
+    "sonner": "^2.0.8",
     "tailwind-merge": "latest",
     "zod": "latest"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@electric-sql/pglite-pgvector": "^0.0.9",
     "@playwright/test": "latest",
     "@tailwindcss/postcss": "latest",
     "@testing-library/jest-dom": "latest",
@@ -42,13 +55,21 @@
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "@vitejs/plugin-react": "latest",
+    "dotenv": "^17.4.2",
+    "drizzle-kit": "^0.31.10",
     "eslint": "latest",
     "eslint-config-next": "16.3.4",
     "jsdom": "^26.1.0",
     "prettier": "latest",
     "tailwindcss": "latest",
+    "tsx": "^4.23.13",
     "typescript": "latest",
     "vitest": "latest"
+  },
+  "overrides": {
+    "@esbuild-kit/core-utils": {
+      "esbuild": "0.25.12"
+    }
   },
   "engines": {
     "node": ">=20.9.0"
