@@ -92,4 +92,3 @@ Example product copy:
 - Brain thinks this job looks very similar to one already shared.
 
 Brain must not behave like a cheesy floating chatbot. AI should appear contextually where it helps the user act.
-

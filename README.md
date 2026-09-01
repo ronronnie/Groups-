@@ -58,4 +58,3 @@ Planned testing:
 - Playwright
 
 Do not introduce Supabase or Firebase.
-

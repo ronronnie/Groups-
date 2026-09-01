@@ -35,4 +35,3 @@ Ask this Group should be available contextually across the experience, not isola
 AI should appear in context as Brain. It should help users understand, compare, extract, search, and act.
 
 Avoid a floating chatbot pattern. Brain is an intelligence layer embedded in product flows.
-

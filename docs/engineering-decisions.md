@@ -44,4 +44,3 @@ Do not introduce:
 - Treat privacy as a backend authorization concern, not only a UI concern.
 - Make AI outputs structured and validated before persistence.
 - Prefer explicit engine contracts over generic runtime configurability.
-

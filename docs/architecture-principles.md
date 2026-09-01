@@ -70,4 +70,3 @@ Do not scatter hardcoded product or AI names throughout implementation code.
 - No Firebase
 - No additional group engines in the MVP
 - No generic configurable workspace builder
-
