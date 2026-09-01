@@ -60,6 +60,7 @@ describe("profile bootstrap", () => {
         showCurrentCompany: boolean;
         showLocation: boolean;
         showSkills: boolean;
+        showYearsExperience: boolean;
       };
     }>(
       `select count(*) over ()::int as count,
@@ -79,6 +80,7 @@ describe("profile bootstrap", () => {
         showCurrentCompany: false,
         showLocation: false,
         showSkills: true,
+        showYearsExperience: true,
       },
     });
   });

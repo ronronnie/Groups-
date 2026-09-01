@@ -125,6 +125,7 @@ export const seedProfiles = people.map((person, index) => ({
     showCurrentCompany: true,
     showLocation: true,
     showSkills: true,
+    showYearsExperience: true,
   },
   createdAt: baseDate,
   updatedAt: baseDate,
@@ -135,6 +136,8 @@ export const seedProfilePreferences = people.map((person, index) => ({
   desiredRoles: [person.role, `Lead ${person.role}`],
   preferredLocations: [person.location, "Remote"],
   remotePreference: index % 2 === 0 ? ("hybrid" as const) : ("remote" as const),
+  resumeUrl: `https://profiles.example.test/demo-person-${index + 1}/resume`,
+  privateNotes: "Open to thoughtful product teams with clear growth paths.",
   createdAt: baseDate,
   updatedAt: baseDate,
 })) satisfies Insert<typeof profilePreferences>[];

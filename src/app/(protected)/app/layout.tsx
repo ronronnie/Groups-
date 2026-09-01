@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LogOut, Settings } from "lucide-react";
+import { LogOut, Settings, UserRound } from "lucide-react";
 import { connection } from "next/server";
 import { BrandMark } from "@/components/brand-mark";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,11 @@ export default async function ProtectedAppLayout({
             <span className="hidden max-w-48 truncate font-secondary text-sm text-muted-foreground sm:inline">
               {user.email}
             </span>
+            <Button asChild size="icon" variant="ghost">
+              <Link aria-label="Career profile" href="/app/profile">
+                <UserRound aria-hidden="true" className="size-4" />
+              </Link>
+            </Button>
             <Button asChild size="icon" variant="ghost">
               <Link aria-label="Account settings" href="/app/settings/account">
                 <Settings aria-hidden="true" className="size-4" />

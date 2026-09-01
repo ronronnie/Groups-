@@ -30,6 +30,7 @@ export async function bootstrapUserProfile(
         showCurrentCompany: false,
         showLocation: false,
         showSkills: true,
+        showYearsExperience: true,
       })}::jsonb
     )
     on conflict (${userIdColumn}) do nothing

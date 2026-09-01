@@ -15,7 +15,9 @@ describe("overlay components", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Open modal" }));
-    expect(screen.getByRole("dialog", { name: "Save role" })).toBeVisible();
+    await waitFor(() =>
+      expect(screen.getByRole("dialog", { name: "Save role" })).toBeVisible(),
+    );
 
     await user.keyboard("{Escape}");
     await waitFor(() =>
@@ -35,7 +37,11 @@ describe("overlay components", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Open drawer" }));
-    expect(screen.getByRole("dialog", { name: "Match details" })).toBeVisible();
+    await waitFor(() =>
+      expect(
+        screen.getByRole("dialog", { name: "Match details" }),
+      ).toBeVisible(),
+    );
 
     await user.click(screen.getByRole("button", { name: "Close" }));
     await waitFor(() =>

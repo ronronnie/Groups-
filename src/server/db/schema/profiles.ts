@@ -19,6 +19,7 @@ type ProfilePrivacySettings = {
   showCurrentCompany: boolean;
   showLocation: boolean;
   showSkills: boolean;
+  showYearsExperience: boolean;
 };
 
 export const profiles = pgTable(
@@ -34,6 +35,9 @@ export const profiles = pgTable(
     yearsExperience: integer("years_experience").notNull().default(0),
     location: text("location").notNull().default(""),
     skills: jsonArray<string>("skills"),
+    portfolioUrl: text("portfolio_url"),
+    linkedinUrl: text("linkedin_url"),
+    websiteUrl: text("website_url"),
     profileCompleteness: integer("profile_completeness").notNull().default(0),
     visibility: text("visibility")
       .$type<ProfileVisibility>()
@@ -72,6 +76,8 @@ export const profilePreferences = pgTable(
       .notNull()
       .default("flexible"),
     minimumSalary: text("minimum_salary"),
+    resumeUrl: text("resume_url"),
+    privateNotes: text("private_notes"),
     ...timestamps(),
   },
   (table) => [
