@@ -16,6 +16,12 @@ export default async function ProtectedAppLayout({
 
   return (
     <div className="min-h-screen">
+      <a
+        className="fixed top-2 left-2 z-[100] -translate-y-20 rounded-md bg-primary px-4 py-2 text-primary-foreground focus:translate-y-0"
+        href="#main-content"
+      >
+        Skip to content
+      </a>
       <header className="border-b bg-surface">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-shell">
           <Link href="/app">
@@ -43,7 +49,7 @@ export default async function ProtectedAppLayout({
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-shell py-section">{children}</main>
+      <div id="main-content">{children}</div>
     </div>
   );
 }
