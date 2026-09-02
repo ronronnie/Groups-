@@ -22,7 +22,8 @@ function SideNavigation({
       <nav>
         <ul className="space-y-1">
           {items.map(({ href, icon: Icon, label }) => {
-            const active = href === activeHref;
+            const active =
+              activeHref === href || activeHref.startsWith(`${href}/`);
             return (
               <li key={href}>
                 <Link

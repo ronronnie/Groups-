@@ -21,7 +21,8 @@ function MobileBottomNavigation({
     >
       <ul className="mx-auto grid h-16 max-w-xl grid-flow-col auto-cols-fr">
         {items.map(({ href, icon: Icon, label }) => {
-          const active = href === activeHref;
+          const active =
+            activeHref === href || activeHref.startsWith(`${href}/`);
           return (
             <li className="min-w-0" key={href}>
               <Link

@@ -4,8 +4,13 @@ import { notFound } from "next/navigation";
 import { StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getGroupEngine } from "@/domains/groups/registry";
+import { JobsTab } from "@/features/jobs/components/jobs-tab";
 import { ProfileCompleteness } from "@/features/profiles/components/profile-completeness";
 import { requireCurrentUser } from "@/server/auth/current-user";
+import { createGroupSqlExecutor } from "@/server/groups/database";
+import { getMemberGroupBySlug } from "@/server/groups/service";
+import { createJobSqlExecutor } from "@/server/jobs/database";
+import { listGroupJobs } from "@/server/jobs/service";
 import { createProfileSqlExecutor } from "@/server/profiles/database";
 import { getOwnerCareerProfile } from "@/server/profiles/service";
 
@@ -23,6 +28,26 @@ export default async function GroupTabPage({
 
   if (!engine || !navigationTab || !emptyState) {
     notFound();
+  }
+
+  if (tab === "jobs") {
+    const user = await requireCurrentUser(`/app/groups/${groupSlug}/jobs`);
+    const group = await getMemberGroupBySlug(
+      createGroupSqlExecutor(),
+      groupSlug,
+      user.id,
+    );
+
+    if (!group) notFound();
+
+    const jobs = await listGroupJobs(createJobSqlExecutor(), {
+      groupId: group.id,
+      viewerId: user.id,
+    });
+
+    if (!jobs) notFound();
+
+    return <JobsTab groupId={group.id} groupSlug={group.slug} jobs={jobs} />;
   }
 
   const profile =
