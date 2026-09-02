@@ -1,6 +1,11 @@
 import { sql, type SQL } from "drizzle-orm";
 import { z } from "zod";
 import {
+  detectDuplicateJob,
+  type DuplicateJobCandidate,
+  type DuplicateJobMatch,
+} from "@/domains/jobs/job-duplicates";
+import {
   canonicalizeJobUrl,
   extractFallbackJobDetails,
   shareJobInputSchema,
@@ -57,6 +62,13 @@ type GroupJobRow = Omit<GroupJob, "postedAt" | "shares"> & {
 };
 
 const idSchema = z.string().uuid();
+
+const duplicateInputSchema = z.object({
+  url: z.string().url().max(2048),
+  title: z.string().trim().min(1).max(160),
+  company: z.string().trim().min(1).max(120),
+  location: z.string().trim().max(160),
+});
 
 function toDate(value: Date | string) {
   return value instanceof Date ? value : new Date(value);
@@ -129,12 +141,72 @@ const groupJobSelection = sql`
   js.shared_at as "sharedAt"
 `;
 
+async function shareExistingGroupJob(
+  execute: JobSqlExecutor,
+  input: {
+    groupId: string;
+    jobId: string;
+    sharerId: string;
+    note: string | null;
+  },
+) {
+  const result = await execute<{
+    shareId: string;
+    jobId: string;
+    groupSlug: string;
+    shareCreated: boolean;
+    reusedExisting: boolean;
+  }>(sql`
+    with authorized_job as materialized (
+      select js.job_id
+      from job_shares js
+      inner join group_memberships membership
+        on membership.group_id = js.group_id
+        and membership.user_id = ${input.sharerId}
+        and membership.status = 'active'
+      where js.group_id = ${input.groupId}
+        and js.job_id = ${input.jobId}
+      limit 1
+    ),
+    existing_share as materialized (
+      select js.id
+      from job_shares js
+      where js.group_id = ${input.groupId}
+        and js.job_id = ${input.jobId}
+        and js.sharer_id = ${input.sharerId}
+    ),
+    saved_share as (
+      insert into job_shares (group_id, job_id, sharer_id, note)
+      select
+        ${input.groupId},
+        authorized_job.job_id,
+        ${input.sharerId},
+        ${input.note}
+      from authorized_job
+      on conflict (group_id, job_id, sharer_id) do update
+      set note = excluded.note
+      returning id, job_id
+    )
+    select
+      saved_share.id as "shareId",
+      saved_share.job_id as "jobId",
+      groups.slug as "groupSlug",
+      not exists (select 1 from existing_share) as "shareCreated",
+      true as "reusedExisting"
+    from saved_share
+    inner join groups on groups.id = ${input.groupId}
+  `);
+
+  return result.rows[0] ?? null;
+}
+
 export async function shareJob(
   execute: JobSqlExecutor,
   input: ShareJobInput & {
     groupId: string;
     sharerId: string;
     reviewedJob?: ReviewedJob;
+    reuseJobId?: string | null;
   },
 ) {
   const groupId = idSchema.parse(input.groupId);
@@ -145,6 +217,7 @@ export async function shareJob(
   const reviewed = input.reviewedJob
     ? reviewedJobSchema.parse(input.reviewedJob)
     : null;
+  const reuseJobId = input.reuseJobId ? idSchema.parse(input.reuseJobId) : null;
   const details = reviewed ?? {
     company: fallback.company,
     title: fallback.title,
@@ -162,11 +235,21 @@ export async function shareJob(
     throw new Error("Reviewed job URL does not match the shared URL.");
   }
 
+  if (reuseJobId) {
+    return shareExistingGroupJob(execute, {
+      groupId,
+      jobId: reuseJobId,
+      sharerId,
+      note: values.note,
+    });
+  }
+
   const result = await execute<{
     shareId: string;
     jobId: string;
     groupSlug: string;
     shareCreated: boolean;
+    reusedExisting: boolean;
   }>(sql`
     with authorized_membership as materialized (
       select gm.group_id
@@ -266,12 +349,57 @@ export async function shareJob(
       ss.id as "shareId",
       ss.job_id as "jobId",
       g.slug as "groupSlug",
-      not exists (select 1 from existing_share) as "shareCreated"
+      not exists (select 1 from existing_share) as "shareCreated",
+      false as "reusedExisting"
     from saved_share ss
     inner join groups g on g.id = ${groupId}
   `);
 
   return result.rows[0] ?? null;
+}
+
+export async function findGroupJobDuplicate(
+  execute: JobSqlExecutor,
+  input: {
+    groupId: string;
+    viewerId: string;
+    url: string;
+    title: string;
+    company: string;
+    location: string;
+  },
+): Promise<DuplicateJobMatch | null> {
+  const groupId = idSchema.parse(input.groupId);
+  const viewerId = idSchema.parse(input.viewerId);
+  const values = duplicateInputSchema.parse(input);
+  const result = await execute<DuplicateJobCandidate>(sql`
+    select distinct
+      jobs.id,
+      jobs.canonical_url as "canonicalUrl",
+      jobs.company,
+      jobs.title,
+      jobs.location
+    from job_shares shares
+    inner join jobs on jobs.id = shares.job_id
+    where shares.group_id = ${groupId}
+      and exists (
+        select 1
+        from group_memberships viewer
+        where viewer.group_id = shares.group_id
+          and viewer.user_id = ${viewerId}
+          and viewer.status = 'active'
+      )
+  `);
+
+  return detectDuplicateJob(
+    {
+      canonicalUrl: values.url,
+      company: values.company,
+      title: values.title,
+      location: values.location,
+    },
+    result.rows,
+  );
 }
 
 export async function isActiveGroupMember(

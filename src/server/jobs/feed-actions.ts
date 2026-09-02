@@ -16,8 +16,9 @@ const actionInputSchema = z.object({
   jobId: z.string().uuid(),
 });
 
-function revalidateFeed(groupSlug: string) {
+function revalidateJobViews(groupSlug: string, jobId: string) {
   revalidatePath(`/app/groups/${groupSlug}/for-you`);
+  revalidatePath(`/app/groups/${groupSlug}/jobs/${jobId}`);
 }
 
 export async function setJobSavedAction(
@@ -36,7 +37,7 @@ export async function setJobSavedAction(
   });
 
   if (!updated) throw new Error("This job is not available in the group.");
-  revalidateFeed(input.groupSlug);
+  revalidateJobViews(input.groupSlug, input.jobId);
 }
 
 export async function setJobDismissedAction(
@@ -55,7 +56,7 @@ export async function setJobDismissedAction(
   });
 
   if (!updated) throw new Error("This job is not available in the group.");
-  revalidateFeed(input.groupSlug);
+  revalidateJobViews(input.groupSlug, input.jobId);
 }
 
 export async function markJobAppliedAction(
@@ -72,5 +73,5 @@ export async function markJobAppliedAction(
   });
 
   if (!updated) throw new Error("This job is not available in the group.");
-  revalidateFeed(input.groupSlug);
+  revalidateJobViews(input.groupSlug, input.jobId);
 }

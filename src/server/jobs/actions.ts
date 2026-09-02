@@ -9,6 +9,7 @@ import {
   toJobExtractionDraft,
   type JobExtractionDraft,
 } from "@/domains/jobs/job-extraction";
+import type { DuplicateJobMatch } from "@/domains/jobs/job-duplicates";
 import { shareJobInputSchema } from "@/domains/jobs/job-sharing";
 import { extractJobDetails } from "@/server/ai/job-extraction";
 import { getOpenAIModelConfig } from "@/server/ai/openai";
@@ -16,12 +17,17 @@ import { requestStructuredJobExtraction } from "@/server/ai/openai-job-extractio
 import { recordAiUsageEvent } from "@/server/ai/usage";
 import { requireCurrentUser } from "@/server/auth/current-user";
 import { createJobSqlExecutor } from "@/server/jobs/database";
-import { isActiveGroupMember, shareJob } from "@/server/jobs/service";
+import {
+  findGroupJobDuplicate,
+  isActiveGroupMember,
+  shareJob,
+} from "@/server/jobs/service";
 
 export type PrepareJobActionState = {
   message: string | null;
   status: "idle" | "error" | "ready";
   draft: JobExtractionDraft | null;
+  duplicate: DuplicateJobMatch | null;
 };
 
 export type ShareJobActionState = {
@@ -30,6 +36,32 @@ export type ShareJobActionState = {
 };
 
 const groupIdSchema = z.string().uuid();
+const optionalJobIdSchema = z.preprocess(
+  (value) => (value === "" || value === null ? null : value),
+  z.string().uuid().nullable(),
+);
+
+async function findDuplicateForDraft(
+  execute: ReturnType<typeof createJobSqlExecutor>,
+  input: {
+    groupId: string;
+    viewerId: string;
+    draft: JobExtractionDraft;
+  },
+) {
+  try {
+    return await findGroupJobDuplicate(execute, {
+      groupId: input.groupId,
+      viewerId: input.viewerId,
+      url: input.draft.url,
+      title: input.draft.title ?? "Job opportunity",
+      company: input.draft.company ?? "Company not provided",
+      location: input.draft.location ?? "",
+    });
+  } catch {
+    return null;
+  }
+}
 
 export async function prepareJobShareAction(
   groupId: string,
@@ -62,6 +94,7 @@ export async function prepareJobShareAction(
       message: issue?.message ?? "Check the job details and retry.",
       status: "error",
       draft: null,
+      duplicate: null,
     };
   }
 
@@ -76,6 +109,7 @@ export async function prepareJobShareAction(
       message: "You must be an active group member to share this job.",
       status: "error",
       draft: null,
+      duplicate: null,
     };
   }
 
@@ -94,6 +128,11 @@ export async function prepareJobShareAction(
       result.extraction,
       result.outcome,
     );
+    const duplicate = await findDuplicateForDraft(execute, {
+      groupId: validGroupId.data,
+      viewerId: user.id,
+      draft,
+    });
 
     return {
       message:
@@ -102,18 +141,26 @@ export async function prepareJobShareAction(
           : "Some details need your review before sharing.",
       status: "ready",
       draft,
+      duplicate,
     };
   } catch {
     const fallback = createFallbackJobExtraction(extractionInput.data);
+    const draft = toJobExtractionDraft(
+      { ...extractionInput.data, note: shareValues.data.note },
+      fallback,
+      "fallback",
+    );
+    const duplicate = await findDuplicateForDraft(execute, {
+      groupId: validGroupId.data,
+      viewerId: user.id,
+      draft,
+    });
     return {
       message:
         "Automatic extraction is unavailable. Review the details before sharing.",
       status: "ready",
-      draft: toJobExtractionDraft(
-        { ...extractionInput.data, note: shareValues.data.note },
-        fallback,
-        "fallback",
-      ),
+      draft,
+      duplicate,
     };
   }
 }
@@ -139,8 +186,9 @@ export async function shareJobAction(
     salaryText: formData.get("salaryText"),
     note: formData.get("note"),
   });
+  const reuseJobId = optionalJobIdSchema.safeParse(formData.get("reuseJobId"));
 
-  if (!validGroupId.success || !reviewed.success) {
+  if (!validGroupId.success || !reviewed.success || !reuseJobId.success) {
     return {
       message:
         reviewed.error?.issues[0]?.message ??
@@ -158,6 +206,7 @@ export async function shareJobAction(
       reviewedJob: reviewed.data,
       groupId: validGroupId.data,
       sharerId: user.id,
+      reuseJobId: reuseJobId.data,
     });
 
     if (!shared) {
@@ -168,10 +217,15 @@ export async function shareJobAction(
     }
 
     revalidatePath(`/app/groups/${shared.groupSlug}/jobs`);
+    revalidatePath(`/app/groups/${shared.groupSlug}/jobs/${shared.jobId}`);
     return {
-      message: shared.shareCreated
-        ? "Job shared with the group."
-        : "This job was already shared by you. Your note is up to date.",
+      message: shared.reusedExisting
+        ? shared.shareCreated
+          ? "Your share was added to the existing job."
+          : "Your note on the existing job is up to date."
+        : shared.shareCreated
+          ? "Job shared with the group."
+          : "This job was already shared by you. Your note is up to date.",
       status: "success",
     };
   } catch {

@@ -2,6 +2,7 @@
 
 import {
   CheckCircle2,
+  CopyCheck,
   Link2,
   LoaderCircle,
   SearchCheck,
@@ -15,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { AI_DISPLAY_NAME } from "@/config/brand";
 import type { JobExtractionDraft } from "@/domains/jobs/job-extraction";
+import type { DuplicateJobMatch } from "@/domains/jobs/job-duplicates";
 import {
   prepareJobShareAction,
   shareJobAction,
@@ -26,6 +28,7 @@ const initialPrepareState: PrepareJobActionState = {
   message: null,
   status: "idle",
   draft: null,
+  duplicate: null,
 };
 
 const initialShareState: ShareJobActionState = {
@@ -49,8 +52,13 @@ function FieldLabel({
 
 function ReviewJobForm({
   draft,
+  duplicate,
   groupId,
-}: Readonly<{ draft: JobExtractionDraft; groupId: string }>) {
+}: Readonly<{
+  draft: JobExtractionDraft;
+  duplicate: DuplicateJobMatch | null;
+  groupId: string;
+}>) {
   const action = shareJobAction.bind(null, groupId);
   const [state, formAction, pending] = useActionState(
     action,
@@ -99,6 +107,54 @@ function ReviewJobForm({
 
       <form action={formAction} className="mt-6 space-y-5">
         <input name="url" type="hidden" value={draft.url} />
+
+        {duplicate ? (
+          <div className="border-l-4 border-brand bg-accent/50 px-4 py-3">
+            <div className="flex items-start gap-3">
+              <CopyCheck
+                aria-hidden="true"
+                className="mt-0.5 size-5 shrink-0 text-brand"
+              />
+              <div className="min-w-0">
+                <h5 className="font-bold">
+                  {duplicate.kind === "exact"
+                    ? "This job is already in the group"
+                    : "A similar job is already in the group"}
+                </h5>
+                <p className="mt-1 font-secondary text-sm leading-6 text-muted-foreground">
+                  {duplicate.title} at {duplicate.company}
+                  {duplicate.location ? `, ${duplicate.location}` : ""}
+                </p>
+                {duplicate.kind === "exact" ? (
+                  <>
+                    <input
+                      name="reuseJobId"
+                      type="hidden"
+                      value={duplicate.id}
+                    />
+                    <p className="mt-2 font-secondary text-sm">
+                      Your note and attribution will be added to the existing
+                      job.
+                    </p>
+                  </>
+                ) : (
+                  <label className="mt-3 flex cursor-pointer items-start gap-2 font-secondary text-sm">
+                    <input
+                      className="mt-0.5 size-4 accent-brand"
+                      defaultChecked
+                      name="reuseJobId"
+                      type="checkbox"
+                      value={duplicate.id}
+                    />
+                    <span>
+                      Use the existing job and add my share attribution
+                    </span>
+                  </label>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         <div className="grid gap-5 sm:grid-cols-2">
           <div className="space-y-2">
@@ -369,7 +425,11 @@ export function ShareJobForm({ groupId }: Readonly<{ groupId: string }>) {
       </form>
 
       {state.status === "ready" && state.draft ? (
-        <ReviewJobForm draft={state.draft} groupId={groupId} />
+        <ReviewJobForm
+          draft={state.draft}
+          duplicate={state.duplicate}
+          groupId={groupId}
+        />
       ) : null}
     </div>
   );
