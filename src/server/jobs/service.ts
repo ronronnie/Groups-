@@ -6,6 +6,10 @@ import {
   shareJobInputSchema,
   type ShareJobInput,
 } from "@/domains/jobs/job-sharing";
+import {
+  reviewedJobSchema,
+  type ReviewedJob,
+} from "@/domains/jobs/job-extraction";
 import type {
   EmploymentType,
   JobStatus,
@@ -127,13 +131,36 @@ const groupJobSelection = sql`
 
 export async function shareJob(
   execute: JobSqlExecutor,
-  input: ShareJobInput & { groupId: string; sharerId: string },
+  input: ShareJobInput & {
+    groupId: string;
+    sharerId: string;
+    reviewedJob?: ReviewedJob;
+  },
 ) {
   const groupId = idSchema.parse(input.groupId);
   const sharerId = idSchema.parse(input.sharerId);
   const values = shareJobInputSchema.parse(input);
   const canonicalUrl = canonicalizeJobUrl(values.url);
   const fallback = extractFallbackJobDetails(canonicalUrl, values);
+  const reviewed = input.reviewedJob
+    ? reviewedJobSchema.parse(input.reviewedJob)
+    : null;
+  const details = reviewed ?? {
+    company: fallback.company,
+    title: fallback.title,
+    descriptionSummary: "",
+    location: "",
+    workMode: "unspecified" as const,
+    employmentType: "unspecified" as const,
+    experienceMin: null,
+    experienceMax: null,
+    skills: [],
+    salaryText: null,
+  };
+
+  if (reviewed && canonicalizeJobUrl(reviewed.url) !== canonicalUrl) {
+    throw new Error("Reviewed job URL does not match the shared URL.");
+  }
 
   const result = await execute<{
     shareId: string;
@@ -154,18 +181,66 @@ export async function shareJob(
         canonical_url,
         company,
         title,
+        description_summary,
+        location,
+        work_mode,
+        employment_type,
+        experience_min,
+        experience_max,
+        skills,
+        salary_text,
         source,
         status
       )
       select
         ${canonicalUrl},
-        ${fallback.company},
-        ${fallback.title},
+        ${details.company},
+        ${details.title},
+        ${details.descriptionSummary},
+        ${details.location},
+        ${details.workMode},
+        ${details.employmentType},
+        ${details.experienceMin},
+        ${details.experienceMax},
+        ${JSON.stringify(details.skills)}::jsonb,
+        ${details.salaryText},
         ${fallback.source},
         'active'
       from authorized_membership
       on conflict (canonical_url) do update
-      set canonical_url = excluded.canonical_url
+      set
+        company = case
+          when jobs.company = 'Company not provided' then excluded.company
+          else jobs.company
+        end,
+        title = case
+          when jobs.title = 'Job opportunity' then excluded.title
+          else jobs.title
+        end,
+        description_summary = case
+          when jobs.description_summary = '' then excluded.description_summary
+          else jobs.description_summary
+        end,
+        location = case
+          when jobs.location = '' then excluded.location
+          else jobs.location
+        end,
+        work_mode = case
+          when jobs.work_mode = 'unspecified' then excluded.work_mode
+          else jobs.work_mode
+        end,
+        employment_type = case
+          when jobs.employment_type = 'unspecified' then excluded.employment_type
+          else jobs.employment_type
+        end,
+        experience_min = coalesce(jobs.experience_min, excluded.experience_min),
+        experience_max = coalesce(jobs.experience_max, excluded.experience_max),
+        skills = case
+          when jobs.skills = '[]'::jsonb then excluded.skills
+          else jobs.skills
+        end,
+        salary_text = coalesce(jobs.salary_text, excluded.salary_text),
+        updated_at = now()
       returning id
     ),
     existing_share as materialized (
@@ -197,6 +272,24 @@ export async function shareJob(
   `);
 
   return result.rows[0] ?? null;
+}
+
+export async function isActiveGroupMember(
+  execute: JobSqlExecutor,
+  input: { groupId: string; userId: string },
+) {
+  const groupId = idSchema.parse(input.groupId);
+  const userId = idSchema.parse(input.userId);
+  const result = await execute<{ allowed: boolean }>(sql`
+    select true as allowed
+    from group_memberships
+    where group_id = ${groupId}
+      and user_id = ${userId}
+      and status = 'active'
+    limit 1
+  `);
+
+  return Boolean(result.rows[0]?.allowed);
 }
 
 export async function listGroupJobs(

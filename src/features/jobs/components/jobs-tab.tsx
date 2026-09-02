@@ -30,8 +30,8 @@ export function JobsTab({
           Share a job
         </h3>
         <p className="mt-1 max-w-2xl font-secondary text-sm leading-6 text-muted-foreground">
-          Add a title or company when the link does not make them clear. More
-          detailed extraction comes later.
+          Add the link and, when available, paste the job description for a more
+          complete result.
         </p>
         <div className="mt-6">
           <ShareJobForm groupId={groupId} />

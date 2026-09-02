@@ -144,6 +144,49 @@ describe("job sharing service", () => {
     expect(shares.rows[0]).toEqual({ count: 1, note: "Updated note." });
   });
 
+  it("persists reviewed structured fields without replacing established identity fields", async () => {
+    await shareJob(execute, {
+      groupId: ids.group,
+      sharerId: ids.member,
+      url: "https://example.com/jobs/product-designer",
+      title: "Untrusted replacement title",
+      company: "Untrusted replacement company",
+      note: "Reviewed details.",
+      reviewedJob: {
+        url: "https://example.com/jobs/product-designer",
+        title: "Untrusted replacement title",
+        company: "Untrusted replacement company",
+        descriptionSummary: "Lead product design across a growing platform.",
+        location: "Bengaluru, India",
+        workMode: "hybrid",
+        employmentType: "full_time",
+        experienceMin: 4,
+        experienceMax: 7,
+        skills: ["Figma", "Product strategy"],
+        salaryText: "INR 30-40L",
+        note: "Reviewed details.",
+      },
+    });
+
+    const job = await getGroupJob(execute, {
+      groupId: ids.group,
+      jobId: sharedJobId,
+      viewerId: ids.owner,
+    });
+    expect(job).toMatchObject({
+      title: "Product Designer",
+      company: "Example",
+      descriptionSummary: "Lead product design across a growing platform.",
+      location: "Bengaluru, India",
+      workMode: "hybrid",
+      employmentType: "full_time",
+      experienceMin: 4,
+      experienceMax: 7,
+      skills: ["Figma", "Product strategy"],
+      salaryText: "INR 30-40L",
+    });
+  });
+
   it("rejects sharing by a non-member", async () => {
     await expect(
       shareJob(execute, {
