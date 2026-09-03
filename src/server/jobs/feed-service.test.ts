@@ -288,6 +288,17 @@ describe("For You jobs feed", () => {
     expect(ownerApplied?.items.map((job) => job.id)).toEqual([ids.designJob]);
     expect(memberApplied?.items).toEqual([]);
 
+    const attribution = await client.query<{ count: number }>(
+      `select count(*)::int as count
+       from reputation_events
+       where group_id = $1
+         and recipient_user_id = $2
+         and actor_user_id = $3
+         and event_type = 'application_attributed'`,
+      [ids.group, ids.member, ids.owner],
+    );
+    expect(attribution.rows[0]?.count).toBe(1);
+
     const application = await client.query<{
       events: number;
       archivedAt: Date | null;

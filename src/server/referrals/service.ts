@@ -10,6 +10,7 @@ import {
   type ReferralState,
   type ReferrerMatchCandidate,
 } from "@/domains/referrals/workflow";
+import { recordReputationEvent } from "@/server/reputation/service";
 
 export type ReferralSqlExecutor = <Row extends Record<string, unknown>>(
   query: SQL,
@@ -459,5 +460,15 @@ export async function transitionReferralRequest(
     inner join recorded_event on recorded_event.request_id = updated_request.id
   `);
 
-  return result.rows[0] ?? null;
+  const transition = result.rows[0] ?? null;
+  if (transition && values.nextState === "referred") {
+    await recordReputationEvent(execute, {
+      groupId: values.groupId,
+      recipientUserId: current.potentialReferrerId,
+      actorUserId: current.requesterId,
+      eventType: "referral_completed",
+      sourceEntityId: transition.requestId,
+    });
+  }
+  return transition;
 }

@@ -152,13 +152,22 @@ erDiagram
     uuid id PK
     uuid group_id FK
     uuid recipient_user_id FK
+    uuid actor_user_id FK
     text event_type
+    text source_entity_type
     uuid source_entity_id
+    int points
   }
   user_reputation_summaries {
     uuid group_id PK,FK
     uuid user_id PK,FK
     int total_points
+    int jobs_shared
+    int jobs_saved_by_members
+    int applications_attributed
+    int referrals_completed
+    int interviews_helped
+    int hires_helped
     timestamp calculated_at
   }
 
@@ -191,6 +200,12 @@ erDiagram
   groups ||--o{ user_reputation_summaries : caches
   users ||--o{ user_reputation_summaries : has
 ```
+
+Reputation events are append-only evidence records created from verified domain
+actions. `user_reputation_summaries` is a disposable read cache and must remain
+fully recalculable from those events. The application never awards reputation
+for message volume; repeated job sharing is point-limited and duplicate source
+credit is rejected.
 
 ## Communication And System ERD
 

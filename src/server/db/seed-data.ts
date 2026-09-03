@@ -583,8 +583,8 @@ export const seedReputationEvents = [
     recipientUserId: userIds[4]!,
     actorUserId: userIds[2]!,
     eventType: "interview_helped" as const,
-    sourceEntityType: "referral_request",
-    sourceEntityId: demoId(6, 2),
+    sourceEntityType: "outcome",
+    sourceEntityId: demoId(9, 2),
     points: 4,
   },
   {
@@ -609,15 +609,26 @@ export const seedReputationEvents = [
   })),
 ] satisfies Insert<typeof reputationEvents>[];
 
-export const seedReputationSummaries = userIds.map((userId, index) => ({
-  groupId,
-  userId,
-  totalPoints: index === 0 ? 4 : index === 3 ? 6 : index === 4 ? 5 : 1,
-  jobsShared: 1,
-  referralsCompleted: index === 3 ? 1 : 0,
-  hiresHelped: 0,
-  calculatedAt: baseDate,
-})) satisfies Insert<typeof userReputationSummaries>[];
+export const seedReputationSummaries = userIds.map((userId) => {
+  const events = seedReputationEvents.filter(
+    (event) => event.recipientUserId === userId,
+  );
+  const count = (eventType: string) =>
+    events.filter((event) => event.eventType === eventType).length;
+
+  return {
+    groupId,
+    userId,
+    totalPoints: events.reduce((total, event) => total + event.points, 0),
+    jobsShared: count("job_shared"),
+    jobsSavedByMembers: count("job_saved_by_member"),
+    applicationsAttributed: count("application_attributed"),
+    referralsCompleted: count("referral_completed"),
+    interviewsHelped: count("interview_helped"),
+    hiresHelped: count("hire_helped"),
+    calculatedAt: baseDate,
+  };
+}) satisfies Insert<typeof userReputationSummaries>[];
 
 export const seedOutcomes = [
   {
@@ -628,6 +639,18 @@ export const seedOutcomes = [
     sharedByUserId: userIds[6]!,
     referredByUserId: userIds[3]!,
     outcomeType: "offer" as const,
+    visibility: "group" as const,
+    consentGrantedAt: baseDate,
+    sharedAt: baseDate,
+  },
+  {
+    id: demoId(9, 2),
+    groupId,
+    jobId: jobIds[4]!,
+    subjectUserId: userIds[2]!,
+    sharedByUserId: userIds[2]!,
+    referredByUserId: userIds[4]!,
+    outcomeType: "interview" as const,
     visibility: "group" as const,
     consentGrantedAt: baseDate,
     sharedAt: baseDate,

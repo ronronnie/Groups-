@@ -16,6 +16,7 @@ import type {
   JobShareAttribution,
   JobSqlExecutor,
 } from "@/server/jobs/service";
+import { recordReputationEvent } from "@/server/reputation/service";
 
 export const feedFilterSchema = z.enum([
   "recommended",
@@ -297,9 +298,16 @@ async function updateViewerJobState(
       jobId: idSchema,
     })
     .parse(input);
-  const result = await execute<{ jobId: string }>(sql`
+  const result = await execute<{
+    jobId: string;
+    shareId: string;
+    sharerId: string;
+  }>(sql`
     with authorized_job as materialized (
-      select js.job_id
+      select
+        js.job_id,
+        js.id as share_id,
+        js.sharer_id
       from job_shares js
       inner join group_memberships membership
         on membership.group_id = js.group_id
@@ -307,6 +315,7 @@ async function updateViewerJobState(
         and membership.status = 'active'
       where js.group_id = ${ids.groupId}
         and js.job_id = ${ids.jobId}
+      order by js.shared_at asc, js.id asc
       limit 1
     ),
     previous_application as materialized (
@@ -419,33 +428,49 @@ async function updateViewerJobState(
         and not ${input.value}
       returning id
     )
-    select updated_state.job_id as "jobId"
+    select
+      updated_state.job_id as "jobId",
+      authorized_job.share_id as "shareId",
+      authorized_job.sharer_id as "sharerId"
     from updated_state
+    inner join authorized_job on authorized_job.job_id = updated_state.job_id
   `);
 
-  return Boolean(result.rows[0]);
+  return result.rows[0] ?? null;
 }
 
-export function setJobSaved(
+export async function setJobSaved(
   execute: JobSqlExecutor,
   input: { groupId: string; userId: string; jobId: string; saved: boolean },
 ) {
-  return updateViewerJobState(execute, {
+  const updated = await updateViewerJobState(execute, {
     ...input,
     field: "saved",
     value: input.saved,
   });
+  if (updated && input.saved && updated.sharerId !== input.userId) {
+    await recordReputationEvent(execute, {
+      groupId: input.groupId,
+      recipientUserId: updated.sharerId,
+      actorUserId: input.userId,
+      eventType: "job_saved_by_member",
+      sourceEntityId: updated.shareId,
+    });
+  }
+  return Boolean(updated);
 }
 
-export function setJobDismissed(
+export async function setJobDismissed(
   execute: JobSqlExecutor,
   input: { groupId: string; userId: string; jobId: string; dismissed: boolean },
 ) {
-  return updateViewerJobState(execute, {
-    ...input,
-    field: "dismissed",
-    value: input.dismissed,
-  });
+  return Boolean(
+    await updateViewerJobState(execute, {
+      ...input,
+      field: "dismissed",
+      value: input.dismissed,
+    }),
+  );
 }
 
 export async function markJobApplied(
@@ -459,9 +484,13 @@ export async function markJobApplied(
       jobId: idSchema,
     })
     .parse(input);
-  const result = await execute<{ applicationId: string }>(sql`
+  const result = await execute<{
+    applicationId: string;
+    shareId: string;
+    sharerId: string;
+  }>(sql`
     with authorized_job as materialized (
-      select js.job_id
+      select js.job_id, js.id as share_id, js.sharer_id
       from job_shares js
       inner join group_memberships membership
         on membership.group_id = js.group_id
@@ -469,6 +498,7 @@ export async function markJobApplied(
         and membership.status = 'active'
       where js.group_id = ${ids.groupId}
         and js.job_id = ${ids.jobId}
+      order by js.shared_at asc, js.id asc
       limit 1
     ),
     previous_application as materialized (
@@ -525,9 +555,23 @@ export async function markJobApplied(
         and coalesce(previous_application.status, 'saved') = 'saved'
       returning application_id
     )
-    select saved_application.id as "applicationId"
+    select
+      saved_application.id as "applicationId",
+      authorized_job.share_id as "shareId",
+      authorized_job.sharer_id as "sharerId"
     from saved_application
+    inner join authorized_job on true
   `);
 
-  return Boolean(result.rows[0]);
+  const application = result.rows[0] ?? null;
+  if (application && application.sharerId !== ids.userId) {
+    await recordReputationEvent(execute, {
+      groupId: ids.groupId,
+      recipientUserId: application.sharerId,
+      actorUserId: ids.userId,
+      eventType: "application_attributed",
+      sourceEntityId: application.applicationId,
+    });
+  }
+  return Boolean(application);
 }

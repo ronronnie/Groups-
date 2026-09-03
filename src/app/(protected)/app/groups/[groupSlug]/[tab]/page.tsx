@@ -4,9 +4,11 @@ import {
   applicationTrackerViewSchema,
 } from "@/domains/applications/tracker";
 import { getGroupEngine } from "@/domains/groups/registry";
+import { peopleDirectoryFilterSchema } from "@/domains/reputation/policy";
 import { ApplicationTracker } from "@/features/applications/components/application-tracker";
 import { ForYouFeed } from "@/features/jobs/components/for-you-feed";
 import { JobsTab } from "@/features/jobs/components/jobs-tab";
+import { PeopleDirectory } from "@/features/people/components/people-directory";
 import { createApplicationSqlExecutor } from "@/server/applications/database";
 import { listApplicationTracker } from "@/server/applications/service";
 import { requireCurrentUser } from "@/server/auth/current-user";
@@ -15,6 +17,8 @@ import { getMemberGroupBySlug } from "@/server/groups/service";
 import { createJobSqlExecutor } from "@/server/jobs/database";
 import { feedFilterSchema, getForYouFeed } from "@/server/jobs/feed-service";
 import { listGroupJobs } from "@/server/jobs/service";
+import { createPeopleSqlExecutor } from "@/server/people/database";
+import { listGroupPeople } from "@/server/people/service";
 
 export default async function GroupTabPage({
   params,
@@ -24,6 +28,8 @@ export default async function GroupTabPage({
   searchParams: Promise<{
     status?: string | string[];
     view?: string | string[];
+    filter?: string | string[];
+    q?: string | string[];
   }>;
 }) {
   const { groupSlug, tab } = await params;
@@ -122,6 +128,43 @@ export default async function GroupTabPage({
         groupId={group.id}
         groupSlug={group.slug}
         view={view}
+      />
+    );
+  }
+
+  if (tab === "people") {
+    const user = await requireCurrentUser(`/app/groups/${groupSlug}/people`);
+    const group = await getMemberGroupBySlug(
+      createGroupSqlExecutor(),
+      groupSlug,
+      user.id,
+    );
+
+    if (!group) notFound();
+
+    const query = await searchParams;
+    const rawFilter = Array.isArray(query.filter)
+      ? query.filter[0]
+      : query.filter;
+    const rawSearch = Array.isArray(query.q) ? query.q[0] : query.q;
+    const parsedFilter = peopleDirectoryFilterSchema.safeParse(rawFilter);
+    const filter = parsedFilter.success ? parsedFilter.data : "all";
+    const memberQuery = rawSearch?.trim().slice(0, 100) ?? "";
+    const members = await listGroupPeople(createPeopleSqlExecutor(), {
+      groupId: group.id,
+      viewerId: user.id,
+      filter,
+      query: memberQuery,
+    });
+
+    if (!members) notFound();
+
+    return (
+      <PeopleDirectory
+        filter={filter}
+        groupSlug={group.slug}
+        members={members}
+        query={memberQuery}
       />
     );
   }

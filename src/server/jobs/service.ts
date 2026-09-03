@@ -20,6 +20,7 @@ import type {
   JobStatus,
   WorkMode,
 } from "@/server/db/schema/jobs";
+import { recordReputationEvent } from "@/server/reputation/service";
 
 export type JobSqlExecutor = <Row extends Record<string, unknown>>(
   query: SQL,
@@ -236,12 +237,22 @@ export async function shareJob(
   }
 
   if (reuseJobId) {
-    return shareExistingGroupJob(execute, {
+    const shared = await shareExistingGroupJob(execute, {
       groupId,
       jobId: reuseJobId,
       sharerId,
       note: values.note,
     });
+    if (shared?.shareCreated) {
+      await recordReputationEvent(execute, {
+        groupId,
+        recipientUserId: sharerId,
+        actorUserId: null,
+        eventType: "job_shared",
+        sourceEntityId: shared.shareId,
+      });
+    }
+    return shared;
   }
 
   const result = await execute<{
@@ -355,7 +366,17 @@ export async function shareJob(
     inner join groups g on g.id = ${groupId}
   `);
 
-  return result.rows[0] ?? null;
+  const shared = result.rows[0] ?? null;
+  if (shared?.shareCreated) {
+    await recordReputationEvent(execute, {
+      groupId,
+      recipientUserId: sharerId,
+      actorUserId: null,
+      eventType: "job_shared",
+      sourceEntityId: shared.shareId,
+    });
+  }
+  return shared;
 }
 
 export async function findGroupJobDuplicate(

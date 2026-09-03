@@ -31,11 +31,17 @@ export function CareerProfileSummary({
           <h2 className="mt-1 text-3xl font-bold" id="career-profile-name">
             {profile.displayName}
           </h2>
-          <p className="mt-2 font-secondary leading-7 text-muted-foreground">
-            {profile.headline}
-          </p>
+          {profile.headline ? (
+            <p className="mt-2 font-secondary leading-7 text-muted-foreground">
+              {profile.headline}
+            </p>
+          ) : null}
         </div>
-        <StatusBadge tone="success">Ready for matching</StatusBadge>
+        <StatusBadge tone={profile.completeness >= 80 ? "success" : "neutral"}>
+          {profile.completeness >= 80
+            ? "Ready for matching"
+            : "Profile in progress"}
+        </StatusBadge>
       </div>
 
       <dl className="mt-7 grid gap-4 font-secondary sm:grid-cols-2">
@@ -46,7 +52,7 @@ export function CareerProfileSummary({
               Current role
             </dt>
             <dd className="mt-1">
-              {profile.currentRole}
+              {profile.currentRole || "Not added"}
               {profile.currentCompany ? ` at ${profile.currentCompany}` : ""}
             </dd>
           </div>
@@ -62,7 +68,7 @@ export function CareerProfileSummary({
             </div>
           </div>
         ) : null}
-        {profile.yearsExperience !== null ? (
+        {profile.yearsExperience !== null && profile.yearsExperience > 0 ? (
           <div className="flex gap-3">
             <Building2 aria-hidden="true" className="mt-0.5 size-5" />
             <div>

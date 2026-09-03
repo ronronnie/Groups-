@@ -53,6 +53,14 @@ Application state is sensitive. Users need clear controls over what is private, 
 
 The architecture should avoid relying only on frontend hiding for privacy-sensitive state.
 
+## Contribution Reputation
+
+Reputation rewards verified usefulness, not posting frequency. Append-only
+reputation events are the source of truth, while member summaries are
+recalculable caches. Every event must reference an authorized group action,
+duplicate credit must be prevented, and high-volume actions must be point
+limited where they could encourage spam.
+
 ## Brand Configuration
 
 Working product labels must be centralized:

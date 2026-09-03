@@ -7,22 +7,16 @@ import {
   primaryKey,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import {
+  reputationEventTypes,
+  type ReputationEventType,
+} from "@/domains/reputation/policy";
 import { users } from "@/server/db/schema/auth";
 import { groups } from "@/server/db/schema/groups";
 import { jsonObject, type JsonObject } from "@/server/db/schema/shared";
-
-const reputationEventTypes = [
-  "job_shared",
-  "job_saved_by_member",
-  "application_attributed",
-  "referral_completed",
-  "interview_helped",
-  "hire_helped",
-] as const;
-
-type ReputationEventType = (typeof reputationEventTypes)[number];
 
 export const reputationEvents = pgTable(
   "reputation_events",
@@ -56,6 +50,13 @@ export const reputationEvents = pgTable(
       table.sourceEntityType,
       table.sourceEntityId,
     ),
+    uniqueIndex("reputation_events_credit_unique").on(
+      table.groupId,
+      table.recipientUserId,
+      table.eventType,
+      table.sourceEntityType,
+      table.sourceEntityId,
+    ),
     check(
       "reputation_events_type_check",
       sql`${table.eventType} in ('job_shared', 'job_saved_by_member', 'application_attributed', 'referral_completed', 'interview_helped', 'hire_helped')`,
@@ -78,7 +79,12 @@ export const userReputationSummaries = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     totalPoints: integer("total_points").notNull().default(0),
     jobsShared: integer("jobs_shared").notNull().default(0),
+    jobsSavedByMembers: integer("jobs_saved_by_members").notNull().default(0),
+    applicationsAttributed: integer("applications_attributed")
+      .notNull()
+      .default(0),
     referralsCompleted: integer("referrals_completed").notNull().default(0),
+    interviewsHelped: integer("interviews_helped").notNull().default(0),
     hiresHelped: integer("hires_helped").notNull().default(0),
     calculatedAt: timestamp("calculated_at", { withTimezone: true })
       .defaultNow()
