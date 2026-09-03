@@ -83,7 +83,7 @@ function toOptionalDate(value: Date | string | null) {
 }
 
 function isApplied(status: string | null) {
-  return status !== null && status !== "not_applied";
+  return status !== null && status !== "saved";
 }
 
 function matchesFilter(item: ForYouFeedItem, filter: FeedFilter) {
@@ -308,7 +308,15 @@ async function updateViewerJobState(
       where js.group_id = ${ids.groupId}
         and js.job_id = ${ids.jobId}
       limit 1
-    )
+    ),
+    previous_application as materialized (
+      select id, status
+      from applications
+      where user_id = ${ids.userId}
+        and job_id = ${ids.jobId}
+      limit 1
+    ),
+    updated_state as (
     insert into user_job_states (
       user_id,
       job_id,
@@ -350,7 +358,69 @@ async function updateViewerJobState(
         else user_job_states.dismissed_at
       end,
       updated_at = now()
-    returning job_id as "jobId"
+    returning job_id
+    ),
+    saved_application as (
+      insert into applications (
+        user_id,
+        job_id,
+        source_group_id,
+        status,
+        visibility
+      )
+      select
+        ${ids.userId},
+        updated_state.job_id,
+        ${ids.groupId},
+        'saved',
+        'private'
+      from updated_state
+      where ${input.field} = 'saved'
+        and ${input.value}
+      on conflict (user_id, job_id) do update
+      set
+        source_group_id = coalesce(
+          applications.source_group_id,
+          excluded.source_group_id
+        ),
+        archived_at = case
+          when applications.status = 'saved' then null
+          else applications.archived_at
+        end,
+        updated_at = now()
+      returning id, status
+    ),
+    recorded_saved_event as (
+      insert into application_status_events (
+        application_id,
+        from_status,
+        to_status,
+        changed_by_user_id
+      )
+      select
+        saved_application.id,
+        null,
+        'saved',
+        ${ids.userId}
+      from saved_application
+      left join previous_application
+        on previous_application.id = saved_application.id
+      where previous_application.id is null
+        and saved_application.status = 'saved'
+      returning application_id
+    ),
+    archived_saved_application as (
+      update applications
+      set archived_at = now(), updated_at = now()
+      where user_id = ${ids.userId}
+        and job_id = ${ids.jobId}
+        and status = 'saved'
+        and ${input.field} = 'saved'
+        and not ${input.value}
+      returning id
+    )
+    select updated_state.job_id as "jobId"
+    from updated_state
   `);
 
   return Boolean(result.rows[0]);
@@ -428,10 +498,11 @@ export async function markJobApplied(
       on conflict (user_id, job_id) do update
       set
         status = case
-          when applications.status = 'not_applied' then 'applied'
+          when applications.status = 'saved' then 'applied'
           else applications.status
         end,
         applied_at = coalesce(applications.applied_at, now()),
+        archived_at = null,
         source_group_id = coalesce(applications.source_group_id, excluded.source_group_id),
         updated_at = now()
       returning id, status
@@ -451,7 +522,7 @@ export async function markJobApplied(
       from saved_application
       left join previous_application on previous_application.id = saved_application.id
       where saved_application.status = 'applied'
-        and coalesce(previous_application.status, 'not_applied') = 'not_applied'
+        and coalesce(previous_application.status, 'saved') = 'saved'
       returning application_id
     )
     select saved_application.id as "applicationId"

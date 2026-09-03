@@ -123,8 +123,8 @@ describe("database schema constraints", () => {
     await database.query(
       `insert into application_status_events
        (application_id, from_status, to_status, changed_by_user_id)
-       values ($1, null, 'not_applied', $2),
-              ($1, 'not_applied', 'applied', $2)`,
+       values ($1, null, 'saved', $2),
+              ($1, 'saved', 'applied', $2)`,
       [ids.application, ids.userA],
     );
 
@@ -140,7 +140,7 @@ describe("database schema constraints", () => {
     );
 
     expect(application.rows[0]).toEqual({
-      status: "not_applied",
+      status: "saved",
       visibility: "private",
     });
     expect(history.rows[0]?.count).toBe(2);

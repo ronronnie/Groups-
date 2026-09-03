@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   check,
+  date,
   index,
   pgTable,
   text,
@@ -8,23 +9,17 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import {
+  applicationStatuses,
+  type ApplicationStatus,
+} from "@/domains/applications/tracker";
 import { users } from "@/server/db/schema/auth";
 import { groups } from "@/server/db/schema/groups";
 import { jobs } from "@/server/db/schema/jobs";
 import { timestamps } from "@/server/db/schema/shared";
 
-const applicationStatuses = [
-  "not_applied",
-  "applied",
-  "interviewing",
-  "offer",
-  "rejected",
-  "withdrawn",
-  "hired",
-] as const;
 const applicationVisibilities = ["private", "referrers", "group"] as const;
 
-type ApplicationStatus = (typeof applicationStatuses)[number];
 type ApplicationVisibility = (typeof applicationVisibilities)[number];
 
 export const applications = pgTable(
@@ -43,11 +38,14 @@ export const applications = pgTable(
     status: text("status")
       .$type<ApplicationStatus>()
       .notNull()
-      .default("not_applied"),
+      .default("saved"),
     visibility: text("visibility")
       .$type<ApplicationVisibility>()
       .notNull()
       .default("private"),
+    privateNotes: text("private_notes"),
+    nextAction: text("next_action"),
+    nextActionDate: date("next_action_date"),
     appliedAt: timestamp("applied_at", { withTimezone: true }),
     archivedAt: timestamp("archived_at", { withTimezone: true }),
     ...timestamps(),
@@ -55,10 +53,14 @@ export const applications = pgTable(
   (table) => [
     uniqueIndex("applications_user_job_unique").on(table.userId, table.jobId),
     index("applications_user_status_idx").on(table.userId, table.status),
+    index("applications_user_next_action_idx").on(
+      table.userId,
+      table.nextActionDate,
+    ),
     index("applications_source_group_id_idx").on(table.sourceGroupId),
     check(
       "applications_status_check",
-      sql`${table.status} in ('not_applied', 'applied', 'interviewing', 'offer', 'rejected', 'withdrawn', 'hired')`,
+      sql`${table.status} in ('saved', 'applied', 'interviewing', 'offer', 'rejected', 'withdrawn', 'hired')`,
     ),
     check(
       "applications_visibility_check",
@@ -91,11 +93,11 @@ export const applicationStatusEvents = pgTable(
     ),
     check(
       "application_status_events_from_check",
-      sql`${table.fromStatus} is null or ${table.fromStatus} in ('not_applied', 'applied', 'interviewing', 'offer', 'rejected', 'withdrawn', 'hired')`,
+      sql`${table.fromStatus} is null or ${table.fromStatus} in ('saved', 'applied', 'interviewing', 'offer', 'rejected', 'withdrawn', 'hired')`,
     ),
     check(
       "application_status_events_to_check",
-      sql`${table.toStatus} in ('not_applied', 'applied', 'interviewing', 'offer', 'rejected', 'withdrawn', 'hired')`,
+      sql`${table.toStatus} in ('saved', 'applied', 'interviewing', 'offer', 'rejected', 'withdrawn', 'hired')`,
     ),
   ],
 );

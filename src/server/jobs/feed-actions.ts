@@ -18,6 +18,7 @@ const actionInputSchema = z.object({
 
 function revalidateJobViews(groupSlug: string, jobId: string) {
   revalidatePath(`/app/groups/${groupSlug}/for-you`);
+  revalidatePath(`/app/groups/${groupSlug}/tracker`);
   revalidatePath(`/app/groups/${groupSlug}/jobs/${jobId}`);
 }
 

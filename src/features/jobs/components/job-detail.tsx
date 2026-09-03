@@ -23,6 +23,7 @@ import {
   workModeLabels,
 } from "@/features/jobs/components/job-card";
 import { JobDiscussion } from "@/features/jobs/components/job-discussion";
+import { ReferralRequestPanel } from "@/features/referrals/components/referral-request-panel";
 import {
   markJobAppliedAction,
   setJobDismissedAction,
@@ -30,6 +31,7 @@ import {
 } from "@/server/jobs/feed-actions";
 import type { GroupJobDetail } from "@/server/jobs/detail-service";
 import type { JobDiscussionMessage } from "@/server/jobs/discussion-service";
+import type { PotentialReferrerOption } from "@/server/referrals/service";
 
 const dateFormatter = new Intl.DateTimeFormat("en", { dateStyle: "medium" });
 
@@ -66,8 +68,7 @@ function JobDetailActions({
   groupSlug: string;
 }>) {
   const applied =
-    detail.applicationStatus !== null &&
-    detail.applicationStatus !== "not_applied";
+    detail.applicationStatus !== null && detail.applicationStatus !== "saved";
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -142,11 +143,13 @@ export function JobDetail({
   groupId,
   groupSlug,
   messages,
+  potentialReferrers,
 }: Readonly<{
   detail: GroupJobDetail;
   groupId: string;
   groupSlug: string;
   messages: JobDiscussionMessage[];
+  potentialReferrers: PotentialReferrerOption[];
 }>) {
   const { job } = detail;
   const workMode = workModeLabels[job.workMode];
@@ -279,13 +282,26 @@ export function JobDetail({
           </h3>
         </div>
         <p className="mt-2 max-w-2xl font-secondary text-sm leading-6 text-muted-foreground">
-          {detail.referralMemberCount > 0
-            ? `${detail.referralMemberCount} group ${detail.referralMemberCount === 1 ? "member may" : "members may"} be able to help with a referral.`
+          {potentialReferrers.length > 0
+            ? `${potentialReferrers.length} relevant group ${potentialReferrers.length === 1 ? "member is" : "members are"} available for a private request.`
             : "Ask the group if someone can offer context or help with a referral."}
         </p>
-        <Button asChild className="mt-4" variant="outline">
-          <a href="#discussion-composer">Ask in discussion</a>
-        </Button>
+        <ReferralRequestPanel
+          candidates={potentialReferrers}
+          groupId={groupId}
+          groupSlug={groupSlug}
+          jobId={job.id}
+        />
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button asChild variant="outline">
+            <a href="#discussion-composer">Ask in discussion</a>
+          </Button>
+          <Button asChild variant="ghost">
+            <Link href={`/app/groups/${groupSlug}/referrals`}>
+              Referral inbox
+            </Link>
+          </Button>
+        </div>
       </section>
 
       <section aria-labelledby="shared-by" className="mt-9 border-t pt-7">

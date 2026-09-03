@@ -173,7 +173,7 @@ function stateAdjustment(candidate: MatchCandidate) {
   if (candidate.dismissed) return -100;
   const applied =
     candidate.applicationStatus !== null &&
-    candidate.applicationStatus !== "not_applied";
+    candidate.applicationStatus !== "saved";
   return (candidate.saved ? 5 : 0) + (applied ? -15 : 0);
 }
 

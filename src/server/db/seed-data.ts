@@ -14,6 +14,7 @@ import type {
   outcomes,
   profilePreferences,
   profiles,
+  referralRequestStateEvents,
   referralRequests,
   reputationEvents,
   userJobStates,
@@ -393,7 +394,7 @@ export const seedApplications = [
     userId: userIds[3]!,
     jobId: jobIds[14]!,
     sourceGroupId: groupId,
-    status: "not_applied" as const,
+    status: "saved" as const,
     visibility: "private" as const,
   },
 ] satisfies Insert<typeof applications>[];
@@ -405,17 +406,14 @@ export const seedApplicationEvents = seedApplications.flatMap(
       applicationId: application.id!,
       fromStatus: null,
       toStatus:
-        application.status === "not_applied"
-          ? ("not_applied" as const)
+        application.status === "saved"
+          ? ("saved" as const)
           : ("applied" as const),
       changedByUserId: application.userId,
       createdAt: baseDate,
     } satisfies Insert<typeof applicationStatusEvents>;
 
-    if (
-      application.status === "applied" ||
-      application.status === "not_applied"
-    )
+    if (application.status === "applied" || application.status === "saved")
       return [applied];
 
     return [
@@ -452,7 +450,7 @@ export const seedReferrals = [
     groupId,
     message:
       "Could we discuss whether my operations background fits this role?",
-    state: "pending" as const,
+    state: "requested" as const,
   },
   {
     id: demoId(6, 3),
@@ -461,11 +459,36 @@ export const seedReferrals = [
     jobId: jobIds[3]!,
     groupId,
     message: "Would you share what the analytics interview usually emphasizes?",
-    state: "completed" as const,
+    state: "referred" as const,
     respondedAt: baseDate,
     completedAt: baseDate,
   },
 ] satisfies Insert<typeof referralRequests>[];
+
+export const seedReferralEvents = seedReferrals.flatMap((request, index) => {
+  const initial = {
+    id: demoId(52, index * 2 + 1),
+    requestId: request.id!,
+    fromState: null,
+    toState: "requested" as const,
+    changedByUserId: request.requesterId,
+    createdAt: baseDate,
+  };
+
+  if (request.state === "requested") return [initial];
+
+  return [
+    initial,
+    {
+      id: demoId(52, index * 2 + 2),
+      requestId: request.id!,
+      fromState: "requested" as const,
+      toState: request.state,
+      changedByUserId: request.potentialReferrerId,
+      createdAt: new Date(baseDate.getTime() + 3_600_000),
+    },
+  ];
+}) satisfies Insert<typeof referralRequestStateEvents>[];
 
 export const seedThreads = [
   {
@@ -685,6 +708,7 @@ export const seedData = {
   applications: seedApplications,
   applicationEvents: seedApplicationEvents,
   referrals: seedReferrals,
+  referralEvents: seedReferralEvents,
   threads: seedThreads,
   messages: seedMessages,
   reputationEvents: seedReputationEvents,

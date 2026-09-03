@@ -1,4 +1,4 @@
-import { Settings, Users } from "lucide-react";
+import { Handshake, Settings, Users } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -37,10 +37,12 @@ export default async function ProtectedGroupLayout({
   return (
     <>
       <section className="border-b bg-surface-subtle px-shell py-5">
-        <div className="mx-auto flex max-w-[100rem] items-center justify-between gap-4">
+        <div className="mx-auto flex max-w-[100rem] flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="truncate text-2xl font-bold">{group.name}</h1>
+              <h1 className="break-words text-xl font-bold sm:text-2xl">
+                {group.name}
+              </h1>
               <StatusBadge tone="info">Jobs & Referrals</StatusBadge>
             </div>
             <p className="mt-1 flex items-center gap-2 font-secondary text-sm text-muted-foreground">
@@ -49,15 +51,24 @@ export default async function ProtectedGroupLayout({
               {group.memberCount === 1 ? "member" : "members"}
             </p>
           </div>
-          {canManageInvites ? (
+          <div className="flex w-full items-center gap-2 sm:w-auto sm:shrink-0">
             <Button asChild size="sm" variant="outline">
-              <Link href={`/app/groups/${group.slug}/invites`}>
-                <Settings aria-hidden="true" className="size-4" />
-                <span className="hidden sm:inline">Manage invites</span>
-                <span className="sm:hidden">Invites</span>
+              <Link href={`/app/groups/${group.slug}/referrals`}>
+                <Handshake aria-hidden="true" className="size-4" />
+                <span className="hidden sm:inline">Referral requests</span>
+                <span className="sm:hidden">Referrals</span>
               </Link>
             </Button>
-          ) : null}
+            {canManageInvites ? (
+              <Button asChild size="sm" variant="outline">
+                <Link href={`/app/groups/${group.slug}/invites`}>
+                  <Settings aria-hidden="true" className="size-4" />
+                  <span className="hidden lg:inline">Manage invites</span>
+                  <span className="lg:hidden">Invites</span>
+                </Link>
+              </Button>
+            ) : null}
+          </div>
         </div>
       </section>
       <GroupNavigationShell items={navigation}>{children}</GroupNavigationShell>

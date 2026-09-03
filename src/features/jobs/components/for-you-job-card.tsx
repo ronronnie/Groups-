@@ -59,7 +59,7 @@ export function ForYouJobCard({
   const workMode = workModeLabels[job.workMode];
   const employmentType = employmentTypeLabels[job.employmentType];
   const applied =
-    job.applicationStatus !== null && job.applicationStatus !== "not_applied";
+    job.applicationStatus !== null && job.applicationStatus !== "saved";
 
   return (
     <article className="rounded-lg border-2 border-border-strong bg-surface p-5 shadow-pop sm:p-6">
@@ -140,6 +140,17 @@ export function ForYouJobCard({
             Open job
           </a>
         </Button>
+
+        {job.referralMemberCount > 0 ? (
+          <Button asChild size="sm" variant="outline">
+            <Link
+              href={`/app/groups/${groupSlug}/jobs/${job.id}#referral-entry`}
+            >
+              <UserRoundCheck aria-hidden="true" className="size-4" />
+              Request referral
+            </Link>
+          </Button>
+        ) : null}
 
         <form
           action={setJobSavedAction.bind(

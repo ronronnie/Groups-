@@ -254,6 +254,12 @@ describe("For You jobs feed", () => {
   });
 
   it("records a private application once and never exposes it to another member", async () => {
+    await setJobSaved(execute, {
+      groupId: ids.group,
+      userId: ids.owner,
+      jobId: ids.designJob,
+      saved: false,
+    });
     await expect(
       markJobApplied(execute, {
         groupId: ids.group,
@@ -284,12 +290,14 @@ describe("For You jobs feed", () => {
 
     const application = await client.query<{
       events: number;
+      archivedAt: Date | null;
       status: string;
       visibility: string;
     }>(
       `select
          a.status,
          a.visibility,
+         a.archived_at as "archivedAt",
          count(event.id)::int as events
        from applications a
        left join application_status_events event on event.application_id = a.id
@@ -300,7 +308,8 @@ describe("For You jobs feed", () => {
     expect(application.rows[0]).toEqual({
       status: "applied",
       visibility: "private",
-      events: 1,
+      archivedAt: null,
+      events: 2,
     });
   });
 });

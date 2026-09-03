@@ -6,6 +6,8 @@ import { getMemberGroupBySlug } from "@/server/groups/service";
 import { createJobSqlExecutor } from "@/server/jobs/database";
 import { getGroupJobDetail } from "@/server/jobs/detail-service";
 import { listJobDiscussion } from "@/server/jobs/discussion-service";
+import { createReferralSqlExecutor } from "@/server/referrals/database";
+import { listPotentialReferrers } from "@/server/referrals/service";
 
 export default async function GroupJobDetailPage({
   params,
@@ -25,7 +27,7 @@ export default async function GroupJobDetailPage({
   if (!group) notFound();
 
   const execute = createJobSqlExecutor();
-  const [detail, messages] = await Promise.all([
+  const [detail, messages, potentialReferrers] = await Promise.all([
     getGroupJobDetail(execute, {
       groupId: group.id,
       jobId,
@@ -36,9 +38,14 @@ export default async function GroupJobDetailPage({
       jobId,
       viewerId: user.id,
     }),
+    listPotentialReferrers(createReferralSqlExecutor(), {
+      groupId: group.id,
+      jobId,
+      viewerId: user.id,
+    }),
   ]);
 
-  if (!detail || !messages) notFound();
+  if (!detail || !messages || !potentialReferrers) notFound();
 
   return (
     <JobDetail
@@ -46,6 +53,7 @@ export default async function GroupJobDetailPage({
       groupId={group.id}
       groupSlug={group.slug}
       messages={messages}
+      potentialReferrers={potentialReferrers}
     />
   );
 }

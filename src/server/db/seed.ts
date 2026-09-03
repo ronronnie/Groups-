@@ -16,6 +16,7 @@ import {
   outcomes,
   profilePreferences,
   profiles,
+  referralRequestStateEvents,
   referralRequests,
   reputationEvents,
   userJobStates,
@@ -58,6 +59,21 @@ async function seedDatabase(databaseUrl: string) {
     .insert(referralRequests)
     .values(seedData.referrals)
     .onConflictDoNothing();
+  const existingReferralEvents = await db
+    .select({ requestId: referralRequestStateEvents.requestId })
+    .from(referralRequestStateEvents);
+  const requestsWithHistory = new Set(
+    existingReferralEvents.map((event) => event.requestId),
+  );
+  const missingReferralEvents = seedData.referralEvents.filter(
+    (event) => !requestsWithHistory.has(event.requestId),
+  );
+  if (missingReferralEvents.length) {
+    await db
+      .insert(referralRequestStateEvents)
+      .values(missingReferralEvents)
+      .onConflictDoNothing();
+  }
   await db
     .insert(messageThreads)
     .values(seedData.threads)

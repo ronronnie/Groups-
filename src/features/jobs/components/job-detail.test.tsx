@@ -14,6 +14,10 @@ vi.mock("@/server/jobs/discussion-actions", () => ({
   postJobDiscussionAction: vi.fn(),
 }));
 
+vi.mock("@/server/referrals/actions", () => ({
+  createReferralRequestAction: vi.fn(),
+}));
+
 const detail: GroupJobDetail = {
   job: {
     id: "80000000-0000-4000-8000-000000000301",
@@ -67,6 +71,18 @@ describe("JobDetail", () => {
             createdAt: new Date("2026-09-03T10:00:00Z"),
           },
         ]}
+        potentialReferrers={[
+          {
+            userId: "80000000-0000-4000-8000-000000000101",
+            displayName: "Helpful Member",
+            currentCompany: "Acme",
+            currentRole: "Senior Product Designer",
+            sharedJob: true,
+            score: 170,
+            context: ["Works at Acme", "Shared this job with the group"],
+            existingRequestState: null,
+          },
+        ]}
       />,
     );
 
@@ -84,6 +100,9 @@ describe("JobDetail", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("textbox", { name: "Add to this discussion" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Request referral" }),
     ).toBeInTheDocument();
   });
 });

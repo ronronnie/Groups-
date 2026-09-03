@@ -111,6 +111,9 @@ erDiagram
     uuid source_group_id FK
     text status
     text visibility
+    text private_notes
+    text next_action
+    date next_action_date
   }
   application_status_events {
     uuid id PK
@@ -126,6 +129,15 @@ erDiagram
     uuid job_id FK
     uuid group_id FK
     text state
+  }
+  referral_request_state_events {
+    uuid id PK
+    uuid request_id FK
+    text from_state
+    text to_state
+    uuid changed_by_user_id FK
+    text note
+    timestamp created_at
   }
   outcomes {
     uuid id PK
@@ -171,6 +183,7 @@ erDiagram
   groups ||--o{ referral_requests : scopes
   jobs ||--o{ referral_requests : concerns
   users ||--o{ referral_requests : requests
+  referral_requests ||--o{ referral_request_state_events : records
   groups ||--o{ outcomes : attributes
   jobs ||--o{ outcomes : produces
   groups ||--o{ reputation_events : records
@@ -242,7 +255,8 @@ erDiagram
 - `groups.engine_key` is typed text and currently accepts only `jobs`.
 - Invite tokens are stored as unique hashes, with expiry, revocation, and use limits.
 - A canonical `jobs` record is separate from each member's `job_shares` record.
-- Applications default to `private`; status changes are append-only events.
+- Applications default to `private`; their seven tracker stages run from `saved` through `hired`, and status changes are append-only events. Private notes and next actions remain owner-scoped in the server data layer.
+- Referral requests use explicit `requested`, `accepted`, `declined`, `needs_info`, `referred`, and `closed` states with append-only history. Candidate matching uses only profile-visible fields and group-visible sharing context; request details are limited to participants and allowed admins.
 - Public profile fields and private matching preferences are separate tables.
 - Message-to-thread foreign keys include `group_id`, preventing cross-group thread references.
 - Group-visible outcomes require explicit consent and a sharing timestamp.

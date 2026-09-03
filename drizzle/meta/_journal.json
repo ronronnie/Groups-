@@ -36,6 +36,20 @@
       "when": 1788292465639,
       "tag": "0004_gray_roughhouse",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788418778580,
+      "tag": "0005_organic_hiroim",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788420943626,
+      "tag": "0006_talented_purifiers",
+      "breakpoints": true
     }
   ]
 }
