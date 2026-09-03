@@ -6,12 +6,15 @@ import {
 import { getGroupEngine } from "@/domains/groups/registry";
 import { peopleDirectoryFilterSchema } from "@/domains/reputation/policy";
 import { ApplicationTracker } from "@/features/applications/components/application-tracker";
+import { GeneralChat } from "@/features/chat/components/general-chat";
 import { ForYouFeed } from "@/features/jobs/components/for-you-feed";
 import { JobsTab } from "@/features/jobs/components/jobs-tab";
 import { PeopleDirectory } from "@/features/people/components/people-directory";
 import { createApplicationSqlExecutor } from "@/server/applications/database";
 import { listApplicationTracker } from "@/server/applications/service";
 import { requireCurrentUser } from "@/server/auth/current-user";
+import { createChatSqlExecutor } from "@/server/chat/database";
+import { listGeneralChatMessages } from "@/server/chat/service";
 import { createGroupSqlExecutor } from "@/server/groups/database";
 import { getMemberGroupBySlug } from "@/server/groups/service";
 import { createJobSqlExecutor } from "@/server/jobs/database";
@@ -165,6 +168,32 @@ export default async function GroupTabPage({
         groupSlug={group.slug}
         members={members}
         query={memberQuery}
+      />
+    );
+  }
+
+  if (tab === "chat") {
+    const user = await requireCurrentUser(`/app/groups/${groupSlug}/chat`);
+    const group = await getMemberGroupBySlug(
+      createGroupSqlExecutor(),
+      groupSlug,
+      user.id,
+    );
+
+    if (!group) notFound();
+
+    const messages = await listGeneralChatMessages(createChatSqlExecutor(), {
+      groupId: group.id,
+      viewerId: user.id,
+    });
+
+    if (!messages) notFound();
+
+    return (
+      <GeneralChat
+        currentUserId={user.id}
+        groupId={group.id}
+        initialMessages={messages}
       />
     );
   }

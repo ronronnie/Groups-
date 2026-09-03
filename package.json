@@ -19,6 +19,7 @@
     "format:write": "prettier --write . --ignore-unknown"
   },
   "dependencies": {
+    "@ably/chat": "^1.4.0",
     "@better-auth/drizzle-adapter": "1.7.2",
     "@neondatabase/serverless": "latest",
     "@radix-ui/react-avatar": "^1.2.6",
