@@ -113,7 +113,7 @@ export function PeopleDirectory({
         <p className="font-secondary text-sm font-bold uppercase text-brand">
           Jobs & Referrals
         </p>
-        <h2 className="mt-2 text-4xl font-bold">People</h2>
+        <h2 className="mt-2 text-3xl font-bold sm:text-4xl">People</h2>
         <p className="mt-2 max-w-2xl font-secondary leading-7 text-muted-foreground">
           Find members by their visible experience and the help they have given
           this group.

@@ -41,7 +41,7 @@ export default async function CareerProfilePage({
           <p className="font-secondary text-sm font-bold uppercase text-brand">
             Your career profile
           </p>
-          <h1 className="text-4xl font-bold sm:text-5xl">
+          <h1 className="text-3xl font-bold sm:text-5xl">
             One profile. Every group.
           </h1>
           <p className="font-secondary leading-7 text-muted-foreground">

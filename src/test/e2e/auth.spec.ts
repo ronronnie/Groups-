@@ -23,6 +23,35 @@ test("authentication pages expose the required methods", async ({ page }) => {
   await expect(page.getByLabel("Password")).toBeVisible();
 });
 
+test("sign up stays usable at 320px with keyboard navigation", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto("/sign-up");
+
+  await expect(
+    page.getByRole("heading", { name: "Create your account" }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Create account" })).toHaveCSS(
+    "height",
+    "40px",
+  );
+
+  const hasHorizontalOverflow = await page.evaluate(
+    () =>
+      document.documentElement.scrollWidth >
+      document.documentElement.clientWidth,
+  );
+  expect(hasHorizontalOverflow).toBe(false);
+
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: "Groups" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("button", { name: "Continue with Google" }),
+  ).toBeFocused();
+});
+
 test("private outcome routes require authentication", async ({ page }) => {
   await page.goto("/app/groups/example/outcomes");
   await expect(page).toHaveURL(/\/sign-in\?next=/);

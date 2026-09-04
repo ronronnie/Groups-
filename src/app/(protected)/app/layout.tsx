@@ -28,7 +28,7 @@ export default async function ProtectedAppLayout({
       >
         Skip to content
       </a>
-      <header className="border-b bg-surface">
+      <header className="sticky top-0 z-50 border-b bg-surface/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-shell">
           <Link href="/app">
             <BrandMark />

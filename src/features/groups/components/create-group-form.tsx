@@ -90,7 +90,13 @@ export function CreateGroupForm() {
         </p>
       ) : null}
 
-      <Button disabled={pending} size="lg" type="submit" variant="brand">
+      <Button
+        className="w-full sm:w-auto"
+        disabled={pending}
+        size="lg"
+        type="submit"
+        variant="brand"
+      >
         {pending ? (
           <LoaderCircle aria-hidden="true" className="size-4 animate-spin" />
         ) : (

@@ -341,7 +341,7 @@ export function ReferralInbox({
       <header>
         <div className="flex items-center gap-3">
           <Handshake aria-hidden="true" className="size-7 text-brand" />
-          <h1 className="text-4xl font-bold">Referral requests</h1>
+          <h1 className="text-3xl font-bold sm:text-4xl">Referral requests</h1>
         </div>
         <p className="mt-2 max-w-2xl font-secondary leading-7 text-muted-foreground">
           Coordinate one-to-one referral help without sharing application notes

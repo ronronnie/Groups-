@@ -5,7 +5,7 @@ export default function AccountSettingsPage() {
     <main className="mx-auto max-w-6xl px-shell py-section">
       <section className="max-w-2xl space-y-8">
         <div className="space-y-2">
-          <h1 className="text-4xl font-bold">Account</h1>
+          <h1 className="text-3xl font-bold sm:text-4xl">Account</h1>
           <p className="font-secondary text-muted-foreground">
             Manage security-sensitive account actions.
           </p>

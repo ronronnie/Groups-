@@ -62,13 +62,13 @@ export function ForYouJobCard({
     job.applicationStatus !== null && job.applicationStatus !== "saved";
 
   return (
-    <article className="rounded-lg border-2 border-border-strong bg-surface p-5 shadow-pop sm:p-6">
+    <article className="min-w-0 rounded-lg border-2 border-border-strong bg-surface p-4 shadow-pop sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="font-secondary text-xs font-bold uppercase text-brand">
             {job.company}
           </p>
-          <h3 className="mt-1 text-2xl font-bold">
+          <h3 className="mt-1 break-words text-xl font-bold sm:text-2xl">
             <Link
               className="underline-offset-4 hover:underline"
               href={`/app/groups/${groupSlug}/jobs/${job.id}`}
@@ -133,9 +133,14 @@ export function ForYouJobCard({
         ) : null}
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center gap-2 border-t pt-4">
+      <div className="mt-5 grid grid-cols-2 items-center gap-2 border-t pt-4 sm:flex sm:flex-wrap">
         <Button asChild size="sm" variant="brand">
-          <a href={job.canonicalUrl} rel="noreferrer" target="_blank">
+          <a
+            className="w-full sm:w-auto"
+            href={job.canonicalUrl}
+            rel="noreferrer"
+            target="_blank"
+          >
             <ExternalLink aria-hidden="true" className="size-4" />
             Open job
           </a>
@@ -144,6 +149,7 @@ export function ForYouJobCard({
         {job.referralMemberCount > 0 ? (
           <Button asChild size="sm" variant="outline">
             <Link
+              className="w-full sm:w-auto"
               href={`/app/groups/${groupSlug}/jobs/${job.id}#referral-entry`}
             >
               <UserRoundCheck aria-hidden="true" className="size-4" />
@@ -160,8 +166,14 @@ export function ForYouJobCard({
             job.id,
             !job.saved,
           )}
+          className="min-w-0"
         >
-          <FeedActionButton pendingLabel="Saving" size="sm" variant="outline">
+          <FeedActionButton
+            className="w-full sm:w-auto"
+            pendingLabel="Saving"
+            size="sm"
+            variant="outline"
+          >
             {job.saved ? (
               <BookmarkCheck aria-hidden="true" className="size-4" />
             ) : (
@@ -179,8 +191,10 @@ export function ForYouJobCard({
         ) : (
           <form
             action={markJobAppliedAction.bind(null, groupId, groupSlug, job.id)}
+            className="min-w-0"
           >
             <FeedActionButton
+              className="w-full sm:w-auto"
               pendingLabel="Updating"
               size="sm"
               variant="outline"
@@ -199,9 +213,14 @@ export function ForYouJobCard({
             job.id,
             !job.dismissed,
           )}
-          className="sm:ml-auto"
+          className="col-span-2 min-w-0 sm:ml-auto"
         >
-          <FeedActionButton pendingLabel="Updating" size="sm" variant="ghost">
+          <FeedActionButton
+            className="w-full sm:w-auto"
+            pendingLabel="Updating"
+            size="sm"
+            variant="ghost"
+          >
             {job.dismissed ? (
               <RotateCcw aria-hidden="true" className="size-4" />
             ) : (

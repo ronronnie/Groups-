@@ -22,7 +22,7 @@ function EmptyState({
   return (
     <div
       className={cn(
-        "flex min-h-52 flex-col items-center justify-center border border-dashed border-input bg-surface-subtle p-6 text-center",
+        "flex min-h-52 flex-col items-center justify-center border border-dashed border-input bg-surface-subtle p-4 text-center sm:p-6",
         className,
       )}
     >
@@ -52,7 +52,7 @@ function ErrorState({
   return (
     <div
       className={cn(
-        "flex min-h-52 flex-col items-start justify-center border-l-4 border-destructive bg-destructive/5 p-6",
+        "flex min-h-52 flex-col items-start justify-center border-l-4 border-destructive bg-destructive/5 p-4 sm:p-6",
         className,
       )}
       role="alert"

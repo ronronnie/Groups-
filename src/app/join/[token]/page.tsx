@@ -39,7 +39,7 @@ export default async function JoinInvitePage({
 
         {!preview ? (
           <section className="mt-16 border-t pt-8">
-            <h1 className="text-4xl font-bold">Invite not found</h1>
+            <h1 className="text-3xl font-bold sm:text-4xl">Invite not found</h1>
             <p className="mt-3 font-secondary leading-7 text-muted-foreground">
               Check the link or ask the person who invited you for a new one.
             </p>
@@ -47,15 +47,19 @@ export default async function JoinInvitePage({
         ) : preview.status !== "active" ? (
           <section className="mt-16 border-t pt-8">
             <StatusBadge tone="danger">Invite unavailable</StatusBadge>
-            <h1 className="mt-4 text-4xl font-bold">{preview.groupName}</h1>
+            <h1 className="mt-4 text-3xl font-bold sm:text-4xl">
+              {preview.groupName}
+            </h1>
             <p className="mt-3 font-secondary leading-7 text-muted-foreground">
               {unavailableMessages[preview.status]}
             </p>
           </section>
         ) : (
-          <section className="mt-12 rounded-lg border-2 border-border-strong bg-surface p-6 shadow-pop sm:p-8">
+          <section className="mt-10 rounded-lg border-2 border-border-strong bg-surface p-5 shadow-pop sm:mt-12 sm:p-8">
             <StatusBadge tone="info">Jobs & Referrals</StatusBadge>
-            <h1 className="mt-5 text-4xl font-bold">{preview.groupName}</h1>
+            <h1 className="mt-5 text-3xl font-bold sm:text-4xl">
+              {preview.groupName}
+            </h1>
             <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 font-secondary text-sm text-muted-foreground">
               <span className="flex items-center gap-2">
                 <Users aria-hidden="true" className="size-4" />

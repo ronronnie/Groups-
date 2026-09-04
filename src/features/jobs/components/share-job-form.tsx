@@ -317,6 +317,7 @@ function ReviewJobForm({
         ) : null}
 
         <Button
+          className="w-full sm:w-auto"
           disabled={pending || state.status === "success"}
           size="lg"
           type="submit"
@@ -414,7 +415,12 @@ export function ShareJobForm({ groupId }: Readonly<{ groupId: string }>) {
           </p>
         ) : null}
 
-        <Button disabled={pending} size="lg" type="submit">
+        <Button
+          className="w-full sm:w-auto"
+          disabled={pending}
+          size="lg"
+          type="submit"
+        >
           {pending ? (
             <LoaderCircle aria-hidden="true" className="size-4 animate-spin" />
           ) : (

@@ -21,9 +21,9 @@ export default async function NotificationsPage() {
 
   return (
     <main className="mx-auto max-w-4xl px-shell py-section">
-      <header className="mb-8 flex items-end justify-between gap-4 border-b pb-6">
+      <header className="mb-8 flex flex-col items-start justify-between gap-4 border-b pb-6 sm:flex-row sm:items-end">
         <div>
-          <h1 className="text-4xl font-bold">Notifications</h1>
+          <h1 className="text-3xl font-bold sm:text-4xl">Notifications</h1>
           <p className="font-secondary mt-2 text-sm text-muted-foreground">
             Matches, requests, and reminders that help you act.
           </p>

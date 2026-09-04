@@ -15,7 +15,7 @@ function MobileBottomNavigation({
     <nav
       aria-label="Mobile group navigation"
       className={cn(
-        "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 px-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] backdrop-blur",
+        "fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 px-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_oklch(0.18_0.02_265/0.08)] backdrop-blur",
         className,
       )}
     >
@@ -28,7 +28,7 @@ function MobileBottomNavigation({
               <Link
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex h-full min-w-0 flex-col items-center justify-center gap-1 rounded-sm px-1 text-[0.6875rem] font-semibold text-muted-foreground",
+                  "flex h-full min-w-0 flex-col items-center justify-center gap-1 rounded-sm px-1 font-secondary text-[0.6875rem] font-bold text-muted-foreground transition-colors",
                   active && "bg-accent/60 text-foreground",
                 )}
                 href={href}

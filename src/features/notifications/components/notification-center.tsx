@@ -93,7 +93,7 @@ export function NotificationCenter({
               className={notification.readAt ? "" : "bg-surface-subtle"}
               key={notification.id}
             >
-              <div className="flex items-center gap-3 px-3 sm:px-4">
+              <div className="flex flex-col items-stretch gap-1 px-3 sm:flex-row sm:items-center sm:gap-3 sm:px-4">
                 {notification.actionUrl ? (
                   <Link
                     className="min-w-0 flex-1"
@@ -106,6 +106,7 @@ export function NotificationCenter({
                 )}
                 {!notification.readAt ? (
                   <form
+                    className="self-end pb-3 sm:self-auto sm:pb-0"
                     action={markNotificationReadAction.bind(
                       null,
                       notification.id,

@@ -201,7 +201,9 @@ export default async function GroupTabPage({
   return (
     <div className="max-w-3xl">
       <div className="space-y-2">
-        <h2 className="text-4xl font-bold">{navigationTab.label}</h2>
+        <h2 className="text-3xl font-bold sm:text-4xl">
+          {navigationTab.label}
+        </h2>
       </div>
       <section className="mt-10 border-t pt-8">
         <h3 className="text-2xl font-bold">{emptyState.title}</h3>

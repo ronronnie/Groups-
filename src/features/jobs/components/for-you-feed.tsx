@@ -64,7 +64,7 @@ export function ForYouFeed({
         <p className="font-secondary text-sm font-bold uppercase text-brand">
           Jobs & Referrals
         </p>
-        <h2 className="text-4xl font-bold">For You</h2>
+        <h2 className="text-3xl font-bold sm:text-4xl">For You</h2>
         <p className="max-w-2xl font-secondary leading-7 text-muted-foreground">
           {AI_DISPLAY_NAME} ranks jobs shared in this group using your private
           career profile.
@@ -72,7 +72,7 @@ export function ForYouFeed({
       </div>
 
       {profileIncomplete ? (
-        <section className="mt-8 border-l-4 border-brand bg-surface-subtle p-5">
+        <section className="mt-8 border-l-4 border-brand bg-surface-subtle p-4 sm:p-5">
           <StatusBadge tone="warning">Profile setup needed</StatusBadge>
           <h3 className="mt-3 text-xl font-bold">Improve your job matches</h3>
           <p className="mt-1 max-w-xl font-secondary text-sm leading-6 text-muted-foreground">

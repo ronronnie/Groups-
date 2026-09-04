@@ -16,7 +16,7 @@ export default function CreateGroupPage() {
         <p className="font-secondary text-sm font-bold uppercase text-brand">
           Create a group
         </p>
-        <h1 className="text-4xl font-bold sm:text-5xl">
+        <h1 className="text-3xl font-bold sm:text-5xl">
           What brings you together?
         </h1>
         <p className="font-secondary leading-7 text-muted-foreground">

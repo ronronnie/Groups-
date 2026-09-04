@@ -72,14 +72,20 @@ function JobDetailActions({
     detail.applicationStatus !== null && detail.applicationStatus !== "saved";
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
       <Button asChild variant="brand">
-        <a href={detail.job.canonicalUrl} rel="noreferrer" target="_blank">
+        <a
+          className="w-full sm:w-auto"
+          href={detail.job.canonicalUrl}
+          rel="noreferrer"
+          target="_blank"
+        >
           <ExternalLink aria-hidden="true" className="size-4" />
           Open job
         </a>
       </Button>
       <form
+        className="min-w-0"
         action={setJobSavedAction.bind(
           null,
           groupId,
@@ -88,7 +94,11 @@ function JobDetailActions({
           !detail.saved,
         )}
       >
-        <FeedActionButton pendingLabel="Saving" variant="outline">
+        <FeedActionButton
+          className="w-full sm:w-auto"
+          pendingLabel="Saving"
+          variant="outline"
+        >
           {detail.saved ? (
             <BookmarkCheck aria-hidden="true" className="size-4" />
           ) : (
@@ -104,6 +114,7 @@ function JobDetailActions({
         </StatusBadge>
       ) : (
         <form
+          className="min-w-0"
           action={markJobAppliedAction.bind(
             null,
             groupId,
@@ -111,13 +122,18 @@ function JobDetailActions({
             detail.job.id,
           )}
         >
-          <FeedActionButton pendingLabel="Updating" variant="outline">
+          <FeedActionButton
+            className="w-full sm:w-auto"
+            pendingLabel="Updating"
+            variant="outline"
+          >
             <BriefcaseBusiness aria-hidden="true" className="size-4" />
             Mark applied
           </FeedActionButton>
         </form>
       )}
       <form
+        className="col-span-2 min-w-0 sm:ml-auto"
         action={setJobDismissedAction.bind(
           null,
           groupId,
@@ -126,7 +142,11 @@ function JobDetailActions({
           !detail.dismissed,
         )}
       >
-        <FeedActionButton pendingLabel="Updating" variant="ghost">
+        <FeedActionButton
+          className="w-full sm:w-auto"
+          pendingLabel="Updating"
+          variant="ghost"
+        >
           {detail.dismissed ? (
             <RotateCcw aria-hidden="true" className="size-4" />
           ) : (
@@ -171,7 +191,9 @@ export function JobDetail({
           <p className="font-secondary text-sm font-bold uppercase text-brand">
             {job.company}
           </p>
-          <h2 className="mt-2 text-4xl font-bold sm:text-5xl">{job.title}</h2>
+          <h2 className="mt-2 break-words text-3xl font-bold sm:text-5xl">
+            {job.title}
+          </h2>
           <div className="mt-4 flex flex-wrap gap-2">
             <StatusBadge tone={job.status === "active" ? "success" : "neutral"}>
               {job.status === "active" ? "Active" : job.status}

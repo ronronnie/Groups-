@@ -76,7 +76,7 @@ export default async function InviteManagementPage({
         <p className="font-secondary text-sm font-bold uppercase text-brand">
           Group settings
         </p>
-        <h2 className="text-4xl font-bold">Invite people</h2>
+        <h2 className="text-3xl font-bold sm:text-4xl">Invite people</h2>
         <p className="max-w-2xl font-secondary leading-7 text-muted-foreground">
           Anyone with an active link can preview this group. They must sign in
           before joining.

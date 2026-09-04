@@ -140,13 +140,13 @@ function TrackerCard({
       ),
   );
   return (
-    <article className="rounded-lg border-2 border-border-strong bg-surface p-4 shadow-pop">
+    <article className="min-w-0 rounded-lg border-2 border-border-strong bg-surface p-4 shadow-pop">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="font-secondary text-xs font-bold uppercase text-brand">
             {application.company}
           </p>
-          <h3 className="mt-1 text-xl font-bold">
+          <h3 className="mt-1 break-words text-xl font-bold">
             <Link
               className="underline-offset-4 hover:underline"
               href={`/app/groups/${groupSlug}/jobs/${application.jobId}`}
@@ -257,7 +257,7 @@ export function ApplicationTracker({
           <p className="font-secondary text-sm font-bold uppercase text-brand">
             Your private workspace
           </p>
-          <h2 className="mt-1 text-4xl font-bold sm:text-5xl">
+          <h2 className="mt-1 text-3xl font-bold sm:text-4xl lg:text-5xl">
             Application tracker
           </h2>
           <p className="mt-2 flex max-w-2xl items-start gap-2 font-secondary text-sm leading-6 text-muted-foreground">
@@ -265,13 +265,20 @@ export function ApplicationTracker({
             Stages, notes, and next actions are visible only to you.
           </p>
         </div>
-        <div aria-label="Tracker view" className="flex gap-1" role="group">
+        <div
+          aria-label="Tracker view"
+          className="flex w-full gap-1 sm:w-auto"
+          role="group"
+        >
           <Button
             asChild
             size="sm"
             variant={view === "board" ? "default" : "outline"}
           >
-            <Link href={trackerHref(groupSlug, "board", filter)}>
+            <Link
+              className="flex-1 sm:flex-none"
+              href={trackerHref(groupSlug, "board", filter)}
+            >
               <LayoutGrid aria-hidden="true" className="size-4" />
               Board
             </Link>
@@ -281,7 +288,10 @@ export function ApplicationTracker({
             size="sm"
             variant={view === "list" ? "default" : "outline"}
           >
-            <Link href={trackerHref(groupSlug, "list", filter)}>
+            <Link
+              className="flex-1 sm:flex-none"
+              href={trackerHref(groupSlug, "list", filter)}
+            >
               <List aria-hidden="true" className="size-4" />
               List
             </Link>
@@ -289,9 +299,12 @@ export function ApplicationTracker({
         </div>
       </header>
 
-      <form className="mt-6 flex flex-wrap items-end gap-3" method="get">
+      <form
+        className="mt-6 grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 sm:flex sm:flex-wrap"
+        method="get"
+      >
         <input name="view" type="hidden" value={view} />
-        <div className="grid gap-1.5">
+        <div className="grid min-w-0 gap-1.5">
           <label
             className="font-secondary text-xs font-bold uppercase text-muted-foreground"
             htmlFor="tracker-status-filter"
@@ -299,7 +312,7 @@ export function ApplicationTracker({
             Status
           </label>
           <select
-            className={cn(selectClassName, "min-w-44")}
+            className={cn(selectClassName, "w-full min-w-0 sm:min-w-44")}
             defaultValue={filter}
             id="tracker-status-filter"
             name="status"
@@ -329,14 +342,18 @@ export function ApplicationTracker({
           title={filter === "all" ? "No applications yet" : "No matches"}
         />
       ) : view === "board" ? (
-        <div className="mt-8 grid items-start gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-8 flex snap-x snap-mandatory items-start gap-4 overflow-x-auto pb-5 md:grid md:snap-none md:grid-cols-2 md:gap-6 md:overflow-visible md:pb-0 xl:grid-cols-3">
           {visibleStatuses.map((status) => {
             const statusApplications = applications.filter(
               (application) => application.status === status,
             );
 
             return (
-              <section aria-labelledby={`stage-${status}`} key={status}>
+              <section
+                aria-labelledby={`stage-${status}`}
+                className="w-[min(17rem,100%)] shrink-0 snap-start md:w-auto"
+                key={status}
+              >
                 <div className="mb-3 flex items-center justify-between border-b-2 border-border-strong pb-2">
                   <h3 className="text-xl font-bold" id={`stage-${status}`}>
                     {applicationStatusLabels[status]}

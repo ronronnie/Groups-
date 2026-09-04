@@ -91,7 +91,7 @@ export function AuthForm({ mode, callbackPath }: AuthFormProps) {
   }
 
   return (
-    <div className="w-full max-w-md rounded-lg border-2 border-border-strong bg-surface p-6 shadow-pop sm:p-8">
+    <div className="w-full max-w-md rounded-lg border-2 border-border-strong bg-surface p-5 shadow-pop sm:p-8">
       <div className="mb-6 space-y-2">
         <h1 className="text-3xl font-bold">
           {isSignUp ? "Create your account" : "Welcome back"}

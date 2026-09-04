@@ -18,7 +18,9 @@ export default async function NotificationSettingsPage({
     <main className="mx-auto max-w-4xl px-shell py-section">
       <section className="max-w-2xl space-y-8">
         <header className="space-y-2 border-b pb-6">
-          <h1 className="text-4xl font-bold">Notification preferences</h1>
+          <h1 className="text-3xl font-bold sm:text-4xl">
+            Notification preferences
+          </h1>
           <p className="font-secondary text-sm leading-6 text-muted-foreground">
             Choose the updates that are useful to you. Private tracker and
             profile details are never included in group-wide activity.

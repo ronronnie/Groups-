@@ -52,43 +52,49 @@ export default async function ProtectedGroupLayout({
               {group.memberCount === 1 ? "member" : "members"}
             </p>
           </div>
-          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0 sm:justify-end">
-            <AskGroupDialog groupId={group.id} groupSlug={group.slug} />
-            <Button asChild size="sm" variant="outline">
-              <Link href={`/app/groups/${group.slug}/outcomes`}>
-                <Trophy aria-hidden="true" className="size-4" />
-                Outcomes
-              </Link>
-            </Button>
-            <Button asChild size="sm" variant="outline">
-              <Link href={`/app/groups/${group.slug}/digest`}>
-                <Newspaper aria-hidden="true" className="size-4" />
-                <span className="hidden lg:inline">Catch up</span>
-                <span className="lg:hidden">Digest</span>
-              </Link>
-            </Button>
-            <Button asChild size="sm" variant="outline">
-              <Link href={`/app/groups/${group.slug}/referrals`}>
-                <Handshake aria-hidden="true" className="size-4" />
-                <span className="hidden sm:inline">Referral requests</span>
-                <span className="sm:hidden">Referrals</span>
-              </Link>
-            </Button>
-            {canManageInvites ? (
+          <nav
+            aria-label="Group actions"
+            className="w-full overflow-x-auto pb-1 sm:min-w-0 sm:flex-1"
+          >
+            <div className="flex w-max items-center gap-2 sm:ml-auto sm:w-auto sm:flex-wrap sm:justify-end">
+              <AskGroupDialog groupId={group.id} groupSlug={group.slug} />
               <Button asChild size="sm" variant="outline">
-                <Link href={`/app/groups/${group.slug}/settings`}>
-                  <Settings aria-hidden="true" className="size-4" />
-                  Manage group
+                <Link href={`/app/groups/${group.slug}/outcomes`}>
+                  <Trophy aria-hidden="true" className="size-4" />
+                  Outcomes
                 </Link>
               </Button>
-            ) : group.allowMemberInvites ? (
               <Button asChild size="sm" variant="outline">
-                <Link href={`/app/groups/${group.slug}/invites`}>
-                  Invite people
+                <Link href={`/app/groups/${group.slug}/digest`}>
+                  <Newspaper aria-hidden="true" className="size-4" />
+                  <span className="hidden lg:inline">Catch up</span>
+                  <span className="lg:hidden">Digest</span>
                 </Link>
               </Button>
-            ) : null}
-          </div>
+              <Button asChild size="sm" variant="outline">
+                <Link href={`/app/groups/${group.slug}/referrals`}>
+                  <Handshake aria-hidden="true" className="size-4" />
+                  <span className="hidden sm:inline">Referral requests</span>
+                  <span className="sm:hidden">Referrals</span>
+                </Link>
+              </Button>
+              {canManageInvites ? (
+                <Button asChild size="sm" variant="outline">
+                  <Link href={`/app/groups/${group.slug}/settings`}>
+                    <Settings aria-hidden="true" className="size-4" />
+                    <span className="hidden sm:inline">Manage group</span>
+                    <span className="sm:hidden">Manage</span>
+                  </Link>
+                </Button>
+              ) : group.allowMemberInvites ? (
+                <Button asChild size="sm" variant="outline">
+                  <Link href={`/app/groups/${group.slug}/invites`}>
+                    Invite people
+                  </Link>
+                </Button>
+              ) : null}
+            </div>
+          </nav>
         </div>
       </section>
       <GroupNavigationShell items={navigation}>{children}</GroupNavigationShell>

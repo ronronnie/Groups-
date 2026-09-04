@@ -26,7 +26,7 @@ export default async function CareerProfileSetupPage() {
         <p className="font-secondary text-sm font-bold uppercase text-brand">
           One profile, every group
         </p>
-        <h1 className="text-4xl font-bold sm:text-5xl">
+        <h1 className="text-3xl font-bold sm:text-5xl">
           Tell us what work fits you.
         </h1>
         <p className="font-secondary leading-7 text-muted-foreground">

@@ -15,7 +15,7 @@ export function JobsTab({
         <p className="font-secondary text-sm font-bold uppercase text-brand">
           Jobs & Referrals
         </p>
-        <h2 className="text-4xl font-bold">Jobs</h2>
+        <h2 className="text-3xl font-bold sm:text-4xl">Jobs</h2>
         <p className="max-w-2xl font-secondary leading-7 text-muted-foreground">
           Share a link once. The group gets a structured job card instead of a
           link buried in chat.

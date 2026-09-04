@@ -31,7 +31,7 @@ export default async function EditCareerProfilePage() {
         <p className="font-secondary text-sm font-bold uppercase text-brand">
           Career profile
         </p>
-        <h1 className="text-4xl font-bold sm:text-5xl">Keep it current.</h1>
+        <h1 className="text-3xl font-bold sm:text-5xl">Keep it current.</h1>
         <p className="font-secondary leading-7 text-muted-foreground">
           Changes apply everywhere your career profile is used.
         </p>

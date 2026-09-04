@@ -17,6 +17,19 @@ test("home page and health endpoint are reachable", async ({ page }) => {
   });
 });
 
+test("public pages have a useful not-found recovery state", async ({
+  page,
+}) => {
+  await page.goto("/this-page-does-not-exist");
+
+  await expect(
+    page.getByRole("heading", { name: "This page is not here." }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Back to your groups" }),
+  ).toBeVisible();
+});
+
 test("design system is responsive and keyboard accessible", async ({
   page,
 }) => {
@@ -27,8 +40,29 @@ test("design system is responsive and keyboard accessible", async ({
     page.getByRole("heading", { name: "Groups design system" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("navigation", { name: "Mobile group navigation" }),
+    page.getByRole("navigation", {
+      name: "Mobile group navigation",
+      exact: true,
+    }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("complementary", {
+      name: "Group navigation",
+      exact: true,
+    }),
+  ).toBeHidden();
+
+  const mobileTargets = page
+    .getByRole("navigation", {
+      name: "Mobile group navigation",
+      exact: true,
+    })
+    .getByRole("link");
+  const mobileTargetCount = await mobileTargets.count();
+  for (let index = 0; index < mobileTargetCount; index += 1) {
+    const box = await mobileTargets.nth(index).boundingBox();
+    expect(box?.height).toBeGreaterThanOrEqual(40);
+  }
 
   const hasHorizontalOverflow = await page.evaluate(
     () =>
@@ -61,8 +95,40 @@ test("design system is responsive and keyboard accessible", async ({
   await expect(askDialog).toBeHidden();
 
   await page.setViewportSize({ width: 1280, height: 900 });
+  await expect(
+    page.getByRole("complementary", {
+      name: "Group navigation",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("navigation", {
+      name: "Mobile group navigation",
+      exact: true,
+    }),
+  ).toBeHidden();
   await page.keyboard.press("Control+k");
   await expect(
     page.getByRole("dialog", { name: "Ask this Group" }),
   ).toBeVisible();
+});
+
+test("reduced motion removes decorative transition durations", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/design-system");
+
+  const durations = await page
+    .locator(".ds-skeleton")
+    .first()
+    .evaluate((node) =>
+      node
+        .getAnimations()
+        .map((animation) =>
+          Number(animation.effect?.getTiming().duration ?? 0),
+        ),
+    );
+
+  expect(durations.every((duration) => duration <= 1)).toBe(true);
 });

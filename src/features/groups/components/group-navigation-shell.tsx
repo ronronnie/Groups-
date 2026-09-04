@@ -48,7 +48,7 @@ export function GroupNavigationShell({
         className="sticky top-16 hidden h-[calc(100vh-4rem)] lg:block"
         items={navigation}
       />
-      <main className="min-w-0 flex-1 px-shell py-8 pb-24 lg:pb-10">
+      <main className="min-w-0 flex-1 px-shell py-6 pb-24 sm:py-8 lg:pb-10">
         {children}
       </main>
       <MobileBottomNavigation
