@@ -83,10 +83,10 @@ export async function getRecipientGroupDigest(
 
   const [preferences, sharedResult, referralResult, savedResult, highlights] =
     await Promise.all([
-      getNotificationPreferences(execute, values.userId),
+      getNotificationPreferences(execute, values.userId, values.groupId),
       execute<{ count: number }>(sql`
         select count(distinct share.id)::int as count
-        from job_shares share
+        from active_job_shares share
         where share.group_id = ${values.groupId}
           and share.shared_at >= ${windowStart}
           and share.shared_at <= ${windowEnd}
@@ -105,7 +105,7 @@ export async function getRecipientGroupDigest(
         select distinct job.id, job.title, job.company
         from user_job_states viewer_state
         inner join jobs job on job.id = viewer_state.job_id
-        inner join job_shares share
+        inner join active_job_shares share
           on share.job_id = job.id
           and share.group_id = ${values.groupId}
         left join applications application

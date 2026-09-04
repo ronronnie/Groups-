@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { JobDetail } from "@/features/jobs/components/job-detail";
 import type { GroupJobDetail } from "@/server/jobs/detail-service";
 import { renderWithApp } from "@/test/render";
+vi.mock("@/server/groups/admin-actions", () => ({ groupAdminAction: vi.fn() }));
 
 vi.mock("@/server/jobs/feed-actions", () => ({
   markJobAppliedAction: vi.fn(),

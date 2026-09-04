@@ -160,7 +160,7 @@ async function shareExistingGroupJob(
   }>(sql`
     with authorized_job as materialized (
       select js.job_id
-      from job_shares js
+      from active_job_shares js
       inner join group_memberships membership
         on membership.group_id = js.group_id
         and membership.user_id = ${input.sharerId}
@@ -171,7 +171,7 @@ async function shareExistingGroupJob(
     ),
     existing_share as materialized (
       select js.id
-      from job_shares js
+      from active_job_shares js
       where js.group_id = ${input.groupId}
         and js.job_id = ${input.jobId}
         and js.sharer_id = ${input.sharerId}
@@ -186,6 +186,7 @@ async function shareExistingGroupJob(
       from authorized_job
       on conflict (group_id, job_id, sharer_id) do update
       set note = excluded.note
+      where job_shares.archived_at is null
       returning id, job_id
     )
     select
@@ -339,7 +340,7 @@ export async function shareJob(
     ),
     existing_share as materialized (
       select js.id
-      from job_shares js
+      from active_job_shares js
       inner join saved_job sj on sj.id = js.job_id
       where js.group_id = ${groupId}
         and js.sharer_id = ${sharerId}
@@ -354,6 +355,7 @@ export async function shareJob(
       from saved_job sj
       on conflict (group_id, job_id, sharer_id) do update
       set note = excluded.note
+      where job_shares.archived_at is null
       returning id, job_id
     )
     select
@@ -400,7 +402,7 @@ export async function findGroupJobDuplicate(
       jobs.company,
       jobs.title,
       jobs.location
-    from job_shares shares
+    from active_job_shares shares
     inner join jobs on jobs.id = shares.job_id
     where shares.group_id = ${groupId}
       and exists (
@@ -460,7 +462,7 @@ export async function listGroupJobs(
 
   const result = await execute<GroupJobRow>(sql`
     select ${groupJobSelection}
-    from job_shares js
+    from active_job_shares js
     inner join jobs j on j.id = js.job_id
     inner join users sharer on sharer.id = js.sharer_id
     where js.group_id = ${groupId}
@@ -490,7 +492,7 @@ export async function getGroupJob(
     .parse(input);
   const result = await execute<GroupJobRow>(sql`
     select ${groupJobSelection}
-    from job_shares js
+    from active_job_shares js
     inner join jobs j on j.id = js.job_id
     inner join users sharer on sharer.id = js.sharer_id
     inner join group_memberships viewer

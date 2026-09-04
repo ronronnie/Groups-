@@ -1,5 +1,6 @@
 import { Link2, Plus, ShieldCheck, UserPlus, X } from "lucide-react";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/ui/badge";
@@ -36,7 +37,12 @@ export default async function InviteManagementPage({
   const execute = createGroupSqlExecutor();
   const group = await getMemberGroupBySlug(execute, groupSlug, user.id);
 
-  if (!group || (group.role !== "owner" && group.role !== "admin")) {
+  if (
+    !group ||
+    (group.role !== "owner" &&
+      group.role !== "admin" &&
+      !group.allowMemberInvites)
+  ) {
     notFound();
   }
 
@@ -58,6 +64,14 @@ export default async function InviteManagementPage({
 
   return (
     <div className="max-w-4xl space-y-10">
+      {group.role !== "member" && (
+        <Link
+          className="text-sm underline"
+          href={`/app/groups/${group.slug}/settings`}
+        >
+          Group management
+        </Link>
+      )}
       <div className="space-y-2">
         <p className="font-secondary text-sm font-bold uppercase text-brand">
           Group settings
@@ -93,6 +107,11 @@ export default async function InviteManagementPage({
           action={createAction}
           className="grid gap-4 sm:grid-cols-3 sm:items-end"
         >
+          {group.invitesEnabled === false && (
+            <p className="text-sm text-muted-foreground sm:col-span-3">
+              Invitations are paused in group settings.
+            </p>
+          )}
           <div className="space-y-2">
             <label
               className="font-secondary text-sm font-bold"
@@ -129,7 +148,11 @@ export default async function InviteManagementPage({
               type="number"
             />
           </div>
-          <Button type="submit" variant="brand">
+          <Button
+            type="submit"
+            variant="brand"
+            disabled={group.invitesEnabled === false}
+          >
             <Plus aria-hidden="true" className="size-4" />
             Create link
           </Button>
@@ -175,7 +198,7 @@ export default async function InviteManagementPage({
                     Expires {formatDate(invite.expiresAt)}
                   </p>
                 </div>
-                {invite.status === "active" ? (
+                {invite.status === "active" || invite.status === "paused" ? (
                   <form action={revokeAction}>
                     <Button size="sm" type="submit" variant="outline">
                       <X aria-hidden="true" className="size-4" />

@@ -28,6 +28,7 @@ import { EmptyState, LoadingState } from "@/components/ui/states";
 import { Textarea } from "@/components/ui/textarea";
 import { getGeneralChatRoomName } from "@/domains/chat/policy";
 import type { GeneralChatMessage } from "@/server/chat/service";
+import { ReportContentForm } from "@/features/groups/components/admin-forms";
 
 type ChatClients = {
   chat: ChatClient;
@@ -77,9 +78,11 @@ async function getErrorMessage(response: Response, fallback: string) {
 export function ChatTranscript({
   currentUserId,
   messages,
+  groupId,
 }: Readonly<{
   currentUserId: string;
   messages: GeneralChatMessage[];
+  groupId?: string;
 }>) {
   if (!messages.length) {
     return (
@@ -114,6 +117,13 @@ export function ChatTranscript({
               <p className="mt-2 whitespace-pre-wrap break-words font-secondary text-sm leading-6">
                 {message.body}
               </p>
+              {groupId && (
+                <ReportContentForm
+                  groupId={groupId}
+                  targetId={message.id}
+                  targetType="message"
+                />
+              )}
             </div>
           </li>
         );
@@ -131,6 +141,7 @@ function ChatRoom({
   const [body, setBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [accessRevoked, setAccessRevoked] = useState(false);
   const transcriptRef = useRef<HTMLDivElement>(null);
   const messagesEndpoint = `/api/groups/${groupId}/chat/messages`;
 
@@ -139,10 +150,28 @@ function ChatRoom({
       cache: "no-store",
       credentials: "same-origin",
     });
+    if (response.status === 401 || response.status === 403) {
+      setMessages([]);
+      setAccessRevoked(true);
+      setNotice("You no longer have access to this chat.");
+      return;
+    }
     if (!response.ok) throw new Error("Unable to refresh messages.");
     const payload = (await response.json()) as MessagesResponse;
     setMessages(payload.messages.map(parseMessage));
   }, [messagesEndpoint]);
+
+  useEffect(() => {
+    const refresh = () => {
+      if (!document.hidden) void refreshMessages().catch(() => undefined);
+    };
+    const timer = window.setInterval(refresh, 15000);
+    window.addEventListener("focus", refresh);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refresh);
+    };
+  }, [refreshMessages]);
 
   const { connectionStatus, roomStatus, sendMessage } = useMessages({
     listener: () => void refreshMessages().catch(() => undefined),
@@ -150,9 +179,11 @@ function ChatRoom({
   });
 
   const isLive =
+    !accessRevoked &&
     connectionStatus === ConnectionStatus.Connected &&
     roomStatus === RoomStatus.Attached;
   const isUnavailable =
+    accessRevoked ||
     connectionStatus === ConnectionStatus.Failed ||
     roomStatus === RoomStatus.Failed;
   const statusLabel = isLive
@@ -254,7 +285,11 @@ function ChatRoom({
         className="max-h-[55vh] min-h-64 overflow-y-auto"
         ref={transcriptRef}
       >
-        <ChatTranscript currentUserId={currentUserId} messages={messages} />
+        <ChatTranscript
+          currentUserId={currentUserId}
+          messages={messages}
+          groupId={groupId}
+        />
       </div>
 
       <form

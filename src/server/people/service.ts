@@ -1,4 +1,5 @@
 import { sql, type SQL } from "drizzle-orm";
+import { groupProfileDetailsAllowedSql } from "@/server/groups/privacy";
 import { z } from "zod";
 import { visibleReputationEventSql } from "@/server/reputation/service";
 import {
@@ -79,7 +80,7 @@ const memberSelection = sql`
   case
     when profile.user_id is not null and (
       profile.user_id = viewer.user_id
-      or profile.visibility in ('groups', 'public')
+      or (profile.visibility in ('groups', 'public') and ${groupProfileDetailsAllowedSql(sql`membership.group_id`)})
     ) then profile.display_name
     else member.name
   end as "displayName",
@@ -87,24 +88,24 @@ const memberSelection = sql`
   membership.joined_at as "joinedAt",
   profile.user_id is not null and (
     profile.user_id = viewer.user_id
-    or profile.visibility in ('groups', 'public')
+    or (profile.visibility in ('groups', 'public') and ${groupProfileDetailsAllowedSql(sql`membership.group_id`)})
   ) as "profileVisible",
   case
     when profile.user_id = viewer.user_id
-      or profile.visibility in ('groups', 'public')
+      or (profile.visibility in ('groups', 'public') and ${groupProfileDetailsAllowedSql(sql`membership.group_id`)})
       then nullif(profile.headline, '')
     else null
   end as headline,
   case
     when profile.user_id = viewer.user_id
-      or profile.visibility in ('groups', 'public')
+      or (profile.visibility in ('groups', 'public') and ${groupProfileDetailsAllowedSql(sql`membership.group_id`)})
       then nullif(profile.current_role, '')
     else null
   end as "currentRole",
   case
     when profile.user_id = viewer.user_id
       or (
-        profile.visibility in ('groups', 'public')
+        (profile.visibility in ('groups', 'public') and ${groupProfileDetailsAllowedSql(sql`membership.group_id`)})
         and coalesce(
           (profile.privacy_settings ->> 'showCurrentCompany')::boolean,
           false
@@ -115,7 +116,7 @@ const memberSelection = sql`
   case
     when profile.user_id = viewer.user_id
       or (
-        profile.visibility in ('groups', 'public')
+        (profile.visibility in ('groups', 'public') and ${groupProfileDetailsAllowedSql(sql`membership.group_id`)})
         and coalesce(
           (profile.privacy_settings ->> 'showLocation')::boolean,
           false
@@ -126,7 +127,7 @@ const memberSelection = sql`
   case
     when profile.user_id = viewer.user_id
       or (
-        profile.visibility in ('groups', 'public')
+        (profile.visibility in ('groups', 'public') and ${groupProfileDetailsAllowedSql(sql`membership.group_id`)})
         and coalesce(
           (profile.privacy_settings ->> 'showSkills')::boolean,
           false

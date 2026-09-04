@@ -1,10 +1,11 @@
-import { sql } from "drizzle-orm";
+import { isNull, sql } from "drizzle-orm";
 import {
   boolean,
   check,
   index,
   integer,
   pgTable,
+  pgView,
   primaryKey,
   text,
   timestamp,
@@ -96,6 +97,7 @@ export const jobShares = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "restrict" }),
     note: text("note"),
+    archivedAt: timestamp("archived_at", { withTimezone: true }),
     sharedAt: timestamp("shared_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -110,6 +112,10 @@ export const jobShares = pgTable(
     index("job_shares_job_id_idx").on(table.jobId),
     index("job_shares_sharer_id_idx").on(table.sharerId),
   ],
+);
+
+export const activeJobShares = pgView("active_job_shares").as((query) =>
+  query.select().from(jobShares).where(isNull(jobShares.archivedAt)),
 );
 
 export const jobEmbeddings = pgTable(

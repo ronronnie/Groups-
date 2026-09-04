@@ -1,4 +1,5 @@
 import { sql, type SQL } from "drizzle-orm";
+import { groupProfileDetailsAllowedSql } from "@/server/groups/privacy";
 import { z } from "zod";
 import {
   canTransitionReferral,
@@ -83,7 +84,7 @@ export async function listPotentialReferrers(
   const jobResult = await execute<{ company: string; title: string }>(sql`
     select job.company, job.title
     from jobs job
-    inner join job_shares share
+    inner join active_job_shares share
       on share.job_id = job.id and share.group_id = ${values.groupId}
     inner join group_memberships viewer
       on viewer.group_id = share.group_id
@@ -98,9 +99,9 @@ export async function listPotentialReferrers(
   const result = await execute<PotentialReferrerRow>(sql`
     select
       membership.user_id as "userId",
-      coalesce(profile.display_name, member.name) as "displayName",
+      case when profile.visibility in ('groups', 'public') and ${groupProfileDetailsAllowedSql(sql`membership.group_id`)} then profile.display_name else member.name end as "displayName",
       case
-        when profile.visibility in ('groups', 'public')
+        when (profile.visibility in ('groups', 'public') and ${groupProfileDetailsAllowedSql(sql`membership.group_id`)})
           and coalesce(
             (profile.privacy_settings ->> 'showCurrentCompany')::boolean,
             false
@@ -109,12 +110,12 @@ export async function listPotentialReferrers(
         else null
       end as "currentCompany",
       case
-        when profile.visibility in ('groups', 'public')
+        when (profile.visibility in ('groups', 'public') and ${groupProfileDetailsAllowedSql(sql`membership.group_id`)})
           then nullif(profile.current_role, '')
         else null
       end as "currentRole",
       exists (
-        select 1 from job_shares candidate_share
+        select 1 from active_job_shares candidate_share
         where candidate_share.group_id = membership.group_id
           and candidate_share.job_id = ${values.jobId}
           and candidate_share.sharer_id = membership.user_id
@@ -206,7 +207,7 @@ export async function createReferralRequest(
             and referrer.status = 'active'
         )
         and exists (
-          select 1 from job_shares share
+          select 1 from active_job_shares share
           where share.group_id = ${values.groupId}
             and share.job_id = ${values.jobId}
         )
@@ -255,17 +256,19 @@ export async function listReferralRequests(
     select
       request.id,
       request.requester_id as "requesterId",
-      coalesce(requester_profile.display_name, requester.name) as "requesterName",
+      case when requester_profile.visibility in ('groups', 'public') and ${groupProfileDetailsAllowedSql(sql`request.group_id`)}
+        then requester_profile.display_name else requester.name end as "requesterName",
       case
-        when requester_profile.visibility in ('groups', 'public')
+        when (requester_profile.visibility in ('groups', 'public') and ${groupProfileDetailsAllowedSql(sql`request.group_id`)})
           and nullif(requester_profile.current_role, '') is not null
           then requester_profile.current_role
         else 'Fellow group member'
       end as "requesterContext",
       request.potential_referrer_id as "potentialReferrerId",
-      coalesce(referrer_profile.display_name, referrer.name) as "potentialReferrerName",
+      case when referrer_profile.visibility in ('groups', 'public') and ${groupProfileDetailsAllowedSql(sql`request.group_id`)}
+        then referrer_profile.display_name else referrer.name end as "potentialReferrerName",
       case
-        when referrer_profile.visibility in ('groups', 'public')
+        when (referrer_profile.visibility in ('groups', 'public') and ${groupProfileDetailsAllowedSql(sql`request.group_id`)})
           and coalesce(
             (referrer_profile.privacy_settings ->> 'showCurrentCompany')::boolean,
             false
@@ -274,12 +277,12 @@ export async function listReferralRequests(
         else null
       end as "referrerCompany",
       case
-        when referrer_profile.visibility in ('groups', 'public')
+        when (referrer_profile.visibility in ('groups', 'public') and ${groupProfileDetailsAllowedSql(sql`request.group_id`)})
           then nullif(referrer_profile.current_role, '')
         else null
       end as "referrerRole",
       exists (
-        select 1 from job_shares referrer_share
+        select 1 from active_job_shares referrer_share
         where referrer_share.group_id = request.group_id
           and referrer_share.job_id = request.job_id
           and referrer_share.sharer_id = request.potential_referrer_id

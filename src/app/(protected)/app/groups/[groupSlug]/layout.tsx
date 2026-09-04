@@ -76,10 +76,15 @@ export default async function ProtectedGroupLayout({
             </Button>
             {canManageInvites ? (
               <Button asChild size="sm" variant="outline">
-                <Link href={`/app/groups/${group.slug}/invites`}>
+                <Link href={`/app/groups/${group.slug}/settings`}>
                   <Settings aria-hidden="true" className="size-4" />
-                  <span className="hidden lg:inline">Manage invites</span>
-                  <span className="lg:hidden">Invites</span>
+                  Manage group
+                </Link>
+              </Button>
+            ) : group.allowMemberInvites ? (
+              <Button asChild size="sm" variant="outline">
+                <Link href={`/app/groups/${group.slug}/invites`}>
+                  Invite people
                 </Link>
               </Button>
             ) : null}

@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { sql, type SQL } from "drizzle-orm";
+import { groupProfileDetailsAllowedSql } from "@/server/groups/privacy";
 import { z } from "zod";
 import type {
   AskGroupSource,
@@ -122,7 +123,7 @@ export async function listAuthorizedKnowledgeSources(
         '/app/groups/' || ${groupSlug} || '/jobs/' || job.id::text as href,
         job.updated_at as "sourceUpdatedAt"
       from jobs job
-      inner join job_shares share on share.job_id = job.id
+      inner join active_job_shares share on share.job_id = job.id
       inner join authorized_group access on access.group_id = share.group_id
       where share.group_id = ${groupId}
       group by job.id
@@ -137,7 +138,7 @@ export async function listAuthorizedKnowledgeSources(
         concat_ws(' ', sharer.name, 'shared', job.title, 'at', job.company, share.note),
         '/app/groups/' || ${groupSlug} || '/jobs/' || job.id::text,
         share.shared_at
-      from job_shares share
+      from active_job_shares share
       inner join authorized_group access on access.group_id = share.group_id
       inner join jobs job on job.id = share.job_id
       inner join users sharer on sharer.id = share.sharer_id
@@ -162,6 +163,7 @@ export async function listAuthorizedKnowledgeSources(
       left join users author on author.id = message.author_id
       where thread.group_id = ${groupId}
         and thread.kind = 'job'
+        and exists (select 1 from active_job_shares share where share.group_id = thread.group_id and share.job_id = thread.job_id)
         and message.deleted_at is null
 
       union all
@@ -192,6 +194,7 @@ export async function listAuthorizedKnowledgeSources(
       where member.group_id = ${groupId}
         and member.status = 'active'
         and profile.visibility in ('groups', 'public')
+        and ${groupProfileDetailsAllowedSql(sql`member.group_id`)}
 
       union all
 
@@ -265,7 +268,7 @@ export async function listViewerSavedJobSources(
       '/app/groups/' || ${groupSlug} || '/jobs/' || job.id::text as href
     from user_job_states state
     inner join jobs job on job.id = state.job_id
-    inner join job_shares share
+    inner join active_job_shares share
       on share.job_id = job.id
       and share.group_id = ${groupId}
     inner join group_memberships viewer
@@ -422,6 +425,20 @@ export async function searchIndexedKnowledge(
       and viewer.user_id = ${viewerId}
       and viewer.status = 'active'
     where document.group_id = ${groupId}
+      and case document.source_kind
+        when 'job' then exists (select 1 from active_job_shares share where share.group_id = document.group_id and share.job_id = document.source_id)
+        when 'job_share' then exists (select 1 from active_job_shares share where share.group_id = document.group_id and share.id = document.source_id)
+        when 'discussion' then exists (select 1 from messages message inner join message_threads thread on thread.id = message.thread_id
+          inner join active_job_shares share on share.group_id = thread.group_id and share.job_id = thread.job_id
+          where message.id = document.source_id and message.group_id = document.group_id and message.deleted_at is null)
+        when 'profile' then ${groupProfileDetailsAllowedSql(sql`document.group_id`)} and exists (
+          select 1 from profiles profile inner join group_memberships member on member.user_id = profile.user_id
+          where member.group_id = document.group_id and member.user_id = document.source_id and member.status = 'active'
+            and profile.visibility in ('groups', 'public'))
+        when 'reputation' then exists (select 1 from group_memberships member where member.group_id = document.group_id
+          and member.user_id = document.source_id and member.status = 'active')
+        else true
+      end
     order by document.embedding <=> ${JSON.stringify(input.embedding)}::vector
     limit ${limit}
   `);

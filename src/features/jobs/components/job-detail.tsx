@@ -1,3 +1,4 @@
+import { ReportContentForm } from "@/features/groups/components/admin-forms";
 import {
   ArrowLeft,
   Bookmark,
@@ -326,6 +327,11 @@ export function JobDetail({
               <p className="mt-2 max-w-2xl font-secondary text-sm leading-6 text-muted-foreground">
                 {share.note ?? "Shared without a note."}
               </p>
+              <ReportContentForm
+                groupId={groupId}
+                targetId={share.id}
+                targetType="job_share"
+              />
             </li>
           ))}
         </ul>

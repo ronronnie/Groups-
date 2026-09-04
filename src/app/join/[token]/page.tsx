@@ -11,6 +11,7 @@ import { getInvitePreview } from "@/server/groups/service";
 
 const unavailableMessages = {
   exhausted: "This invite link has reached its join limit.",
+  paused: "Invitations to this group are paused.",
   expired: "This invite link has expired.",
   revoked: "This invite link was revoked by a group admin.",
 } as const;

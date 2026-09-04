@@ -68,9 +68,9 @@ function preferenceSql(category: NotificationCategory) {
     return sql`coalesce(preference.application_reminders_enabled, true)`;
   }
   if (category === "job_activity") {
-    return sql`coalesce(preference.job_activity_enabled, true)`;
+    return sql`coalesce(preference.job_activity_enabled, (notification_group.settings ->> 'jobNotificationsDefault')::boolean, true)`;
   }
-  return sql`coalesce(preference.group_activity_enabled, true)`;
+  return sql`coalesce(preference.group_activity_enabled, (notification_group.settings ->> 'groupNotificationsDefault')::boolean, true)`;
 }
 
 export async function emitActivityEvent(
@@ -146,6 +146,7 @@ export async function emitActivityEvent(
           and membership.status = 'active'
         left join notification_preferences preference
           on preference.user_id = recipient.user_id
+        inner join groups notification_group on notification_group.id = membership.group_id
         where ${category !== null}
           and coalesce(preference.in_app_enabled, true)
           and ${category ? preferenceSql(category) : sql`false`}
@@ -165,6 +166,7 @@ export async function emitActivityEvent(
 export async function getNotificationPreferences(
   execute: NotificationSqlExecutor,
   userId: string,
+  groupId?: string,
 ): Promise<NotificationPreferences> {
   const validUserId = idSchema.parse(userId);
   const result = await execute<NotificationPreferences>(sql`
@@ -181,6 +183,18 @@ export async function getNotificationPreferences(
     limit 1
   `);
 
+  if (!result.rows[0] && groupId) {
+    const defaults = await execute<{ settings: Record<string, unknown> }>(sql`
+      select g.settings from groups g inner join group_memberships member on member.group_id = g.id
+      where g.id = ${idSchema.parse(groupId)} and member.user_id = ${validUserId} and member.status = 'active'`);
+    const settings = defaults.rows[0]?.settings;
+    return notificationPreferencesSchema.parse({
+      ...defaultNotificationPreferences,
+      jobActivityEnabled: settings?.jobNotificationsDefault ?? true,
+      groupActivityEnabled: settings?.groupNotificationsDefault ?? true,
+      digestCadence: settings?.digestCadenceDefault ?? "weekly",
+    });
+  }
   return notificationPreferencesSchema.parse(
     result.rows[0] ?? defaultNotificationPreferences,
   );
@@ -325,7 +339,7 @@ export async function createJobSharedEvent(
   const job = await execute<{ title: string; company: string }>(sql`
     select job.title, job.company
     from jobs job
-    inner join job_shares share on share.job_id = job.id
+    inner join active_job_shares share on share.job_id = job.id
     where share.id = ${values.shareId}
       and share.group_id = ${values.groupId}
       and share.sharer_id = ${values.actorUserId}
@@ -439,7 +453,7 @@ export async function createJobSavedByMemberEvent(
       share.sharer_id as "sharerId",
       job.title,
       job.company
-    from job_shares share
+    from active_job_shares share
     inner join jobs job on job.id = share.job_id
     inner join group_memberships saver
       on saver.group_id = share.group_id
@@ -772,7 +786,7 @@ export async function createClosingSoonNotifications(
       job.company
     from user_job_states viewer_state
     inner join jobs job on job.id = viewer_state.job_id
-    inner join job_shares share on share.job_id = job.id
+    inner join active_job_shares share on share.job_id = job.id
     inner join groups group_record on group_record.id = share.group_id
     inner join group_memberships membership
       on membership.group_id = share.group_id

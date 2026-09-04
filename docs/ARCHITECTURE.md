@@ -366,3 +366,44 @@ The tracker offers private milestone recording. `/app/groups/[groupSlug]/outcome
 defaults to the owner's records and has an explicit shared-with-group view.
 Server queries enforce membership, ownership, group scope, and current consent;
 admins receive no special access to private outcomes.
+
+## Group Administration And Moderation
+
+Prompt 19 adds `/app/groups/[groupSlug]/settings` with settings, membership,
+and moderation views. Owner/admin/member checks are enforced in each SQL
+mutation, not inferred from visible controls. Group and actor locks serialize
+admin changes; owner identity is protected in addition to membership role.
+Owners control admin roles. Admins can remove ordinary members; owners can also
+remove admins. Removal revokes invites issued by that member and blocks invite
+reactivation. Existing private profiles and trackers are not deleted.
+
+Settings use Zod and an explicit allowlist: group name, invite pause/member
+invites, profile visibility ceiling, job/group notification defaults, and digest
+cadence. Slug, engine, and owner remain unchanged. A names-only group hides
+shared career details in people, referral discovery, and search; it never
+changes global profile consent. Saved personal notification preferences override
+group defaults. Members may create invites only when allowed and may list only
+their own; admins retain access to all links, including paused ones for revocation.
+
+Migration `0011` adds `job_shares.archived_at`, the `active_job_shares` view,
+`group_content_reports`, and append-only `group_admin_events`. Moderation verifies
+the target's group and kind, records a reason, resolves open reports, and clears
+derived search data atomically. Restoring requires another explicit admin action.
+Reports are deduplicated per reporter/target and can be dismissed without hiding
+content. There is no AI moderation call or automatic deletion in this step.
+
+Job discovery, details, discussions, referral discovery, and related notifications
+use active shares. Private application history and existing outcome attribution
+remain intact. Vector retrieval rechecks archive state and group profile policy
+even if a concurrent index refresh recreates an old document. General chat reads
+filter hidden messages and recheck membership. Open chat refreshes every 15 seconds
+and on focus, clearing the transcript when access is denied. Ably events contain
+only persisted message IDs, never message bodies; already issued tokens expire
+under the existing token policy and are not retroactively revoked by this step.
+
+Integration tests apply all migrations to isolated PGlite databases and cover
+owner protection, role changes, removal/rejoin denial, invite policy/revocation,
+report scope/deduplication, hide/restore/dismiss, cross-group archive isolation,
+private tracker preservation, stale vector results, privacy ceilings, and
+personal notification overrides. Component tests cover form submission, feedback,
+confirmation, and role-gated controls.

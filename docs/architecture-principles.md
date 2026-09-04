@@ -84,6 +84,23 @@ referral fields out of outcome payloads. Private outcomes must not generate
 visible reputation; withdrawing sharing removes their visible credit while
 preserving append-only evidence. No automatic outcome announcements.
 
+## Group Administration
+
+Only owners may promote or demote other non-owner members. Admins may remove
+ordinary members, while owners may also remove admins; neither role may remove
+itself or alter the owner. Removed memberships cannot be reactivated by invites.
+Member-issued invitations are opt-in and members manage only their own links.
+
+Moderation is an explicit, audited human action. Archive a group share, never
+its canonical job or a member's private tracker. Hidden shares and general chat
+messages remain restorable. Reports are group-scoped and admin-only; no AI
+deletion is permitted. Discovery must use active shares and recheck source
+visibility rather than trusting a stale search index.
+
+Group profile policy is a visibility ceiling, never permission to reveal a
+private field. Notification defaults apply only when a member has no saved
+preferences. The Jobs & Referrals engine and ownership are not editable settings.
+
 ## Brand Configuration
 
 Working product labels must be centralized:

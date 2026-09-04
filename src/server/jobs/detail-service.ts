@@ -77,7 +77,7 @@ export async function getGroupJobDetail(
       and membership.status = 'active'
       and exists (
         select 1
-        from job_shares shares
+        from active_job_shares shares
         where shares.group_id = membership.group_id
           and shares.job_id = ${ids.jobId}
       )

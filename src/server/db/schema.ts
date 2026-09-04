@@ -3,6 +3,7 @@ export * from "@/server/db/schema/auth";
 export * from "@/server/db/schema/communications";
 export * from "@/server/db/schema/groups";
 export * from "@/server/db/schema/jobs";
+export * from "@/server/db/schema/moderation";
 export * from "@/server/db/schema/outcomes";
 export * from "@/server/db/schema/profiles";
 export * from "@/server/db/schema/referrals";

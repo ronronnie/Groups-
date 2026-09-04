@@ -1,7 +1,8 @@
 import { screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { ChatTranscript } from "@/features/chat/components/general-chat";
 import { renderWithApp } from "@/test/render";
+vi.mock("@/server/groups/admin-actions", () => ({ groupAdminAction: vi.fn() }));
 
 const currentUserId = "80000000-0000-4000-8000-000000000101";
 

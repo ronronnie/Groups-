@@ -90,6 +90,8 @@ export async function listGeneralChatMessages(
       where thread.group_id = ${values.groupId}
         and thread.kind = 'general'
         and message.deleted_at is null
+        and exists (select 1 from group_memberships viewer where viewer.group_id = thread.group_id
+          and viewer.user_id = ${values.viewerId} and viewer.status = 'active')
       order by message.created_at desc, message.id desc
       limit 100
     ) recent_messages

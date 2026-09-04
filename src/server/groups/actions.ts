@@ -1,6 +1,7 @@
 "use server";
 
 import { notFound, redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createGroupInputSchema } from "@/domains/groups/validation";
 import { requireCurrentUser } from "@/server/auth/current-user";
@@ -102,6 +103,7 @@ export async function revokeInviteAction(groupId: string, inviteId: string) {
   if (!revoked) {
     notFound();
   }
+  revalidatePath("/app", "layout");
 }
 
 export async function acceptInviteAction(token: string) {

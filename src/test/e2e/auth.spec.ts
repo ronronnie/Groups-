@@ -30,3 +30,14 @@ test("private outcome routes require authentication", async ({ page }) => {
     page.getByRole("heading", { name: "Welcome back" }),
   ).toBeVisible();
 });
+
+test("group administration routes require authentication", async ({ page }) => {
+  await page.goto("/app/groups/example/settings?tab=moderation");
+  await expect(page).toHaveURL(/\/sign-in\?next=/);
+  await expect(
+    page.getByRole("heading", { name: "Welcome back" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Group management" }),
+  ).toHaveCount(0);
+});

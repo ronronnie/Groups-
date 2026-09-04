@@ -43,7 +43,7 @@ async function canAccessJobDiscussion(
       and membership.status = 'active'
       and exists (
         select 1
-        from job_shares shares
+        from active_job_shares shares
         where shares.group_id = membership.group_id
           and shares.job_id = ${input.jobId}
       )
@@ -107,7 +107,7 @@ export async function createJobDiscussionMessage(
     with authorized_job as materialized (
       select jobs.id, jobs.title
       from jobs
-      inner join job_shares shares on shares.job_id = jobs.id
+      inner join active_job_shares shares on shares.job_id = jobs.id
       inner join group_memberships membership
         on membership.group_id = shares.group_id
         and membership.user_id = ${ids.authorId}

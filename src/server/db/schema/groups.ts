@@ -11,16 +11,14 @@ import {
 } from "drizzle-orm/pg-core";
 import { users } from "@/server/db/schema/auth";
 import { jsonObject, timestamps } from "@/server/db/schema/shared";
+import type { GroupSettings as ValidatedGroupSettings } from "@/domains/groups/admin";
 
 const groupRoles = ["owner", "admin", "member"] as const;
 const membershipStatuses = ["active", "left", "removed"] as const;
 
 type GroupRole = (typeof groupRoles)[number];
 type MembershipStatus = (typeof membershipStatuses)[number];
-type GroupSettings = {
-  allowMemberInvites?: boolean;
-  defaultProfileVisibility?: "members" | "private";
-};
+type GroupSettings = Partial<ValidatedGroupSettings>;
 
 export const groups = pgTable(
   "groups",

@@ -224,7 +224,7 @@ export async function getForYouFeed(
             false
           )
       ) as "referralMemberCount"
-    from job_shares js
+    from active_job_shares js
     inner join jobs j on j.id = js.job_id
     inner join users sharer on sharer.id = js.sharer_id
     left join user_job_states viewer_state
@@ -308,7 +308,7 @@ async function updateViewerJobState(
         js.job_id,
         js.id as share_id,
         js.sharer_id
-      from job_shares js
+      from active_job_shares js
       inner join group_memberships membership
         on membership.group_id = js.group_id
         and membership.user_id = ${ids.userId}
@@ -491,7 +491,7 @@ export async function markJobApplied(
   }>(sql`
     with authorized_job as materialized (
       select js.job_id, js.id as share_id, js.sharer_id
-      from job_shares js
+      from active_job_shares js
       inner join group_memberships membership
         on membership.group_id = js.group_id
         and membership.user_id = ${ids.userId}

@@ -22,9 +22,12 @@ export type MemberGroup = {
   engineKey: "jobs";
   role: "owner" | "admin" | "member";
   memberCount: number;
+  allowMemberInvites?: boolean;
+  invitesEnabled?: boolean;
 };
 
-export type InviteStatus = "active" | "expired" | "revoked" | "exhausted";
+export type InviteStatus =
+  "active" | "expired" | "revoked" | "exhausted" | "paused";
 
 export type InvitePreview = {
   id: string;
@@ -68,6 +71,8 @@ export function createGroupSlug(name: string, suffix: string) {
 function inviteStatusSql(now: Date) {
   return sql<InviteStatus>`case
     when gi.revoked_at is not null then 'revoked'
+    when exists (select 1 from groups paused where paused.id = gi.group_id
+      and paused.settings ->> 'invitesEnabled' = 'false') then 'paused'
     when gi.expires_at <= ${now} then 'expired'
     when gi.max_uses is not null and gi.use_count >= gi.max_uses then 'exhausted'
     else 'active'
@@ -181,8 +186,9 @@ export async function createGroupInvite(
       on gm.group_id = g.id
       and gm.user_id = ${input.inviterId}
       and gm.status = 'active'
-      and gm.role in ('owner', 'admin')
+      and (gm.role in ('owner', 'admin') or g.settings ->> 'allowMemberInvites' = 'true')
     where g.id = ${values.groupId}
+      and coalesce(g.settings ->> 'invitesEnabled', 'true') = 'true'
     returning
       id,
       group_id as "groupId",
@@ -253,7 +259,9 @@ export async function acceptGroupInvite(
     with valid_invite as materialized (
       select gi.id, gi.group_id
       from group_invites gi
+      inner join groups g on g.id = gi.group_id
       where gi.token_hash = ${tokenHash}
+        and coalesce(g.settings ->> 'invitesEnabled', 'true') = 'true'
         and gi.revoked_at is null
         and gi.expires_at > ${now}
         and (gi.max_uses is null or gi.use_count < gi.max_uses)
@@ -276,7 +284,7 @@ export async function acceptGroupInvite(
         role = 'member',
         ended_at = null,
         updated_at = ${now}
-      where group_memberships.status <> 'active'
+      where group_memberships.status = 'left'
       returning group_id
     ),
     consumed_invite as (
@@ -316,6 +324,8 @@ export async function getMemberGroupBySlug(
       g.slug,
       g.engine_key as "engineKey",
       viewer.role,
+      coalesce((g.settings ->> 'allowMemberInvites')::boolean, false) as "allowMemberInvites",
+      coalesce((g.settings ->> 'invitesEnabled')::boolean, true) as "invitesEnabled",
       count(members.id)::int as "memberCount"
     from groups g
     inner join group_memberships viewer
@@ -369,7 +379,8 @@ export async function listManagedInvites(
     where group_id = ${groupId}
       and user_id = ${userId}
       and status = 'active'
-      and role in ('owner', 'admin')
+      and (role in ('owner', 'admin') or exists (select 1 from groups g
+        where g.id = ${groupId} and g.settings ->> 'allowMemberInvites' = 'true'))
     limit 1
   `);
   if (!authorized.rows[0]) {
@@ -397,7 +408,8 @@ export async function listManagedInvites(
         where gm.group_id = gi.group_id
           and gm.user_id = ${userId}
           and gm.status = 'active'
-          and gm.role in ('owner', 'admin')
+          and (gm.role in ('owner', 'admin') or (gi.inviter_id = ${userId} and exists (
+            select 1 from groups g where g.id = gi.group_id and g.settings ->> 'allowMemberInvites' = 'true')))
       )
     order by gi.created_at desc
   `);
@@ -425,7 +437,7 @@ export async function revokeGroupInvite(
         where gm.group_id = gi.group_id
           and gm.user_id = ${input.userId}
           and gm.status = 'active'
-          and gm.role in ('owner', 'admin')
+          and (gm.role in ('owner', 'admin') or gi.inviter_id = ${input.userId})
       )
     returning gi.id
   `);
