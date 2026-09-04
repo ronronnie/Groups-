@@ -11,6 +11,7 @@ import {
   createGroupWithInvite,
   revokeGroupInvite,
 } from "@/server/groups/service";
+import { createInviteAcceptedEvent } from "@/server/notifications/service";
 
 type GroupActionState = { error: string | null };
 
@@ -106,13 +107,23 @@ export async function revokeInviteAction(groupId: string, inviteId: string) {
 export async function acceptInviteAction(token: string) {
   const returnTo = `/join/${encodeURIComponent(token)}`;
   const user = await requireCurrentUser(returnTo);
-  const accepted = await acceptGroupInvite(createGroupSqlExecutor(), {
+  const execute = createGroupSqlExecutor();
+  const accepted = await acceptGroupInvite(execute, {
     token,
     userId: user.id,
   });
 
   if (!accepted) {
     redirect(`${returnTo}?error=unavailable`);
+  }
+
+  if (!accepted.alreadyMember) {
+    await Promise.allSettled([
+      createInviteAcceptedEvent(execute, {
+        groupId: accepted.groupId,
+        memberId: user.id,
+      }),
+    ]);
   }
 
   redirect(`/app/groups/${accepted.groupSlug}`);

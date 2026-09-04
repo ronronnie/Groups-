@@ -219,8 +219,11 @@ erDiagram
   messages o|--o{ messages : replies_to
   users ||--o{ notifications : receives
   groups o|--o{ notifications : scopes
+  activity_events o|--o{ notifications : routes
+  users ||--o| notification_preferences : controls
   groups ||--o{ activity_events : records
   users o|--o{ activity_events : performs
+  users o|--o{ activity_events : privately_receives
   groups o|--o{ ai_usage_events : scopes
   users o|--o{ ai_usage_events : initiates
 
@@ -244,15 +247,30 @@ erDiagram
     uuid id PK
     uuid user_id FK
     uuid group_id FK
+    uuid activity_event_id FK
     text type
+    text action_url
+    text dedupe_key UK
     jsonb payload
+  }
+  notification_preferences {
+    uuid user_id PK,FK
+    boolean in_app_enabled
+    boolean strong_matches_enabled
+    boolean referral_requests_enabled
+    boolean application_reminders_enabled
+    boolean job_activity_enabled
+    boolean group_activity_enabled
+    text digest_cadence
   }
   activity_events {
     uuid id PK
     uuid group_id FK
     uuid actor_user_id FK
+    uuid recipient_user_id FK
     text event_type
     text visibility
+    text dedupe_key UK
   }
   ai_usage_events {
     uuid id PK
@@ -264,6 +282,20 @@ erDiagram
     int completion_tokens
   }
 ```
+
+`activity_events` is the canonical, idempotent stream for useful product
+events. Notifications are recipient-specific deliveries routed from that
+stream after active membership and user preferences are checked. Private
+events always carry a recipient; shared activity queries must filter to
+`visibility = 'group'`.
+
+Daily and weekly catch-ups are generated for one authenticated recipient at a
+time from deterministic domain data. They do not persist a group-wide digest
+payload. Strong matches may read that recipient's private career preferences,
+and saved-job actions may read that recipient's private tracker, but neither
+the inputs nor another member's application state can enter group highlights.
+AI may summarize this deterministic result later; it must not decide which
+private records are eligible.
 
 ## Enforced Invariants
 

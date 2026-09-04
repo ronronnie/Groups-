@@ -1,10 +1,12 @@
 import Link from "next/link";
-import { LogOut, Settings, UserRound } from "lucide-react";
+import { Bell, LogOut, Settings, UserRound } from "lucide-react";
 import { connection } from "next/server";
 import { BrandMark } from "@/components/brand-mark";
 import { Button } from "@/components/ui/button";
 import { logoutAction } from "@/server/auth/actions";
 import { requireCurrentUser } from "@/server/auth/current-user";
+import { createNotificationSqlExecutor } from "@/server/notifications/database";
+import { countUnreadNotifications } from "@/server/notifications/service";
 
 export default async function ProtectedAppLayout({
   children,
@@ -13,6 +15,10 @@ export default async function ProtectedAppLayout({
 }) {
   await connection();
   const user = await requireCurrentUser("/app");
+  const unreadCount = await countUnreadNotifications(
+    createNotificationSqlExecutor(),
+    user.id,
+  );
 
   return (
     <div className="min-h-screen">
@@ -31,6 +37,16 @@ export default async function ProtectedAppLayout({
             <span className="hidden max-w-48 truncate font-secondary text-sm text-muted-foreground sm:inline">
               {user.email}
             </span>
+            <Button asChild className="relative" size="icon" variant="ghost">
+              <Link aria-label="Notifications" href="/app/notifications">
+                <Bell aria-hidden="true" className="size-4" />
+                {unreadCount ? (
+                  <span className="absolute top-1 right-1 grid size-4 place-items-center rounded-full bg-destructive font-secondary text-[10px] leading-none text-destructive-foreground">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                ) : null}
+              </Link>
+            </Button>
             <Button asChild size="icon" variant="ghost">
               <Link aria-label="Career profile" href="/app/profile">
                 <UserRound aria-hidden="true" className="size-4" />

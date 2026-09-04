@@ -1,4 +1,4 @@
-import { Handshake, Settings, Users } from "lucide-react";
+import { Handshake, Newspaper, Settings, Users } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -52,8 +52,15 @@ export default async function ProtectedGroupLayout({
               {group.memberCount === 1 ? "member" : "members"}
             </p>
           </div>
-          <div className="flex w-full items-center gap-2 sm:w-auto sm:shrink-0">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0 sm:justify-end">
             <AskGroupDialog groupId={group.id} groupSlug={group.slug} />
+            <Button asChild size="sm" variant="outline">
+              <Link href={`/app/groups/${group.slug}/digest`}>
+                <Newspaper aria-hidden="true" className="size-4" />
+                <span className="hidden lg:inline">Catch up</span>
+                <span className="lg:hidden">Digest</span>
+              </Link>
+            </Button>
             <Button asChild size="sm" variant="outline">
               <Link href={`/app/groups/${group.slug}/referrals`}>
                 <Handshake aria-hidden="true" className="size-4" />

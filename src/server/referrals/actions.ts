@@ -11,6 +11,10 @@ import {
   createReferralRequest,
   transitionReferralRequest,
 } from "@/server/referrals/service";
+import {
+  createReferralRequestReceivedEvent,
+  createReferralRequestUpdatedEvent,
+} from "@/server/notifications/service";
 
 export type ReferralActionState = {
   status: "idle" | "success" | "error";
@@ -43,7 +47,8 @@ export async function createReferralRequestAction(
     };
   }
 
-  const created = await createReferralRequest(createReferralSqlExecutor(), {
+  const execute = createReferralSqlExecutor();
+  const created = await createReferralRequest(execute, {
     ...parsed.data,
     requesterId: user.id,
   });
@@ -53,6 +58,10 @@ export async function createReferralRequestAction(
       message: "This request is unavailable or already active.",
     };
   }
+
+  await Promise.allSettled([
+    createReferralRequestReceivedEvent(execute, created.requestId),
+  ]);
 
   revalidateReferralViews(groupSlug, parsed.data.jobId);
   return { status: "success", message: "Referral request sent privately." };
@@ -70,10 +79,17 @@ export async function transitionReferralRequestAction(
     nextState: formData.get("nextState"),
     note: formData.get("note") ?? "",
   });
-  const updated = await transitionReferralRequest(createReferralSqlExecutor(), {
+  const execute = createReferralSqlExecutor();
+  const updated = await transitionReferralRequest(execute, {
     ...parsed,
     userId: user.id,
   });
   if (!updated) throw new Error("This referral action is not available.");
+  await Promise.allSettled([
+    createReferralRequestUpdatedEvent(execute, {
+      requestId: updated.requestId,
+      actorUserId: user.id,
+    }),
+  ]);
   revalidateReferralViews(groupSlug);
 }

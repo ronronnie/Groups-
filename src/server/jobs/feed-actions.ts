@@ -9,6 +9,7 @@ import {
   setJobDismissed,
   setJobSaved,
 } from "@/server/jobs/feed-service";
+import { createJobSavedByMemberEvent } from "@/server/notifications/service";
 
 const actionInputSchema = z.object({
   groupId: z.string().uuid(),
@@ -30,7 +31,8 @@ export async function setJobSavedAction(
 ) {
   const user = await requireCurrentUser("/app");
   const input = actionInputSchema.parse({ groupId, groupSlug, jobId });
-  const updated = await setJobSaved(createJobSqlExecutor(), {
+  const execute = createJobSqlExecutor();
+  const updated = await setJobSaved(execute, {
     groupId: input.groupId,
     userId: user.id,
     jobId: input.jobId,
@@ -38,6 +40,16 @@ export async function setJobSavedAction(
   });
 
   if (!updated) throw new Error("This job is not available in the group.");
+  if (saved) {
+    await Promise.allSettled([
+      createJobSavedByMemberEvent(execute, {
+        groupId: input.groupId,
+        groupSlug: input.groupSlug,
+        jobId: input.jobId,
+        saverId: user.id,
+      }),
+    ]);
+  }
   revalidateJobViews(input.groupSlug, input.jobId);
 }
 

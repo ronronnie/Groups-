@@ -64,6 +64,13 @@
       "when": 1788450297773,
       "tag": "0008_great_masque",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1788510844641,
+      "tag": "0009_marvelous_nightshade",
+      "breakpoints": true
     }
   ]
 }

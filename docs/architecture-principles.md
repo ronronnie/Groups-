@@ -61,6 +61,18 @@ recalculable caches. Every event must reference an authorized group action,
 duplicate credit must be prevented, and high-volume actions must be point
 limited where they could encourage spam.
 
+## Notifications And Catch-Ups
+
+Useful domain actions create idempotent `activity_events`. In-app
+notifications are preference-aware deliveries from those events, not a second
+source of truth. Private events require an explicit recipient, and notification
+recipients must be active members of the event's group.
+
+Daily and weekly catch-ups are generated per recipient. Group contribution
+highlights may use only group-visible events. Private career preferences and
+application details can influence that recipient's matches and reminders but
+must never appear in shared activity or another member's digest.
+
 ## Brand Configuration
 
 Working product labels must be centralized:

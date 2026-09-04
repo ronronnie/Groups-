@@ -22,6 +22,10 @@ import {
   isActiveGroupMember,
   shareJob,
 } from "@/server/jobs/service";
+import {
+  createJobSharedEvent,
+  createStrongMatchEventsForJob,
+} from "@/server/notifications/service";
 
 export type PrepareJobActionState = {
   message: string | null;
@@ -198,7 +202,8 @@ export async function shareJobAction(
   }
 
   try {
-    const shared = await shareJob(createJobSqlExecutor(), {
+    const execute = createJobSqlExecutor();
+    const shared = await shareJob(execute, {
       url: reviewed.data.url,
       title: reviewed.data.title,
       company: reviewed.data.company,
@@ -214,6 +219,23 @@ export async function shareJobAction(
         message: "You must be an active group member to share this job.",
         status: "error",
       };
+    }
+
+    if (shared.shareCreated) {
+      await Promise.allSettled([
+        createJobSharedEvent(execute, {
+          groupId: validGroupId.data,
+          actorUserId: user.id,
+          jobId: shared.jobId,
+          shareId: shared.shareId,
+        }),
+        createStrongMatchEventsForJob(execute, {
+          groupId: validGroupId.data,
+          groupSlug: shared.groupSlug,
+          jobId: shared.jobId,
+          actorUserId: user.id,
+        }),
+      ]);
     }
 
     revalidatePath(`/app/groups/${shared.groupSlug}/jobs`);
