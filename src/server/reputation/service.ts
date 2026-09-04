@@ -24,6 +24,16 @@ const summaryInputSchema = z.object({
   userId: z.string().uuid(),
 });
 
+// Queries using this predicate must alias reputation_events as event.
+export const visibleReputationEventSql = sql`(
+  event.source_entity_type <> 'outcome' or exists (
+    select 1 from outcomes outcome
+    where outcome.id = event.source_entity_id and outcome.group_id = event.group_id
+      and outcome.visibility = 'group' and outcome.consent_granted_at is not null
+      and outcome.shared_at is not null
+  )
+)`;
+
 function sourceAuthorizationSql(input: z.infer<typeof eventInputSchema>) {
   if (input.eventType === "job_shared") {
     return sql`exists (
@@ -86,7 +96,22 @@ function sourceAuthorizationSql(input: z.infer<typeof eventInputSchema>) {
         or source.referred_by_user_id = ${input.recipientUserId}
       )
       and source.outcome_type = ${outcomeType}
+      and source.subject_user_id <> ${input.recipientUserId}
+      and source.visibility = 'group'
+      and source.shared_at is not null
       and source.consent_granted_at is not null
+      and (
+        source.shared_by_user_id = ${input.recipientUserId} and exists (
+          select 1 from job_shares share where share.group_id = source.group_id
+            and share.job_id = source.job_id and share.sharer_id = ${input.recipientUserId})
+        or source.referred_by_user_id = ${input.recipientUserId} and exists (
+          select 1 from referral_requests request
+          inner join referral_request_state_events event on event.request_id = request.id
+          where request.group_id = source.group_id and request.job_id = source.job_id
+            and request.requester_id = source.subject_user_id
+            and request.potential_referrer_id = ${input.recipientUserId}
+            and event.to_state = 'referred' and event.changed_by_user_id = ${input.recipientUserId})
+      )
   )`;
 }
 
@@ -123,6 +148,7 @@ export async function recalculateReputationSummary(
     left join reputation_events event
       on event.group_id = membership.group_id
       and event.recipient_user_id = membership.user_id
+      and ${visibleReputationEventSql}
     where membership.group_id = ${values.groupId}
       and membership.user_id = ${values.userId}
       and membership.status = 'active'

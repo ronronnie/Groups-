@@ -334,3 +334,35 @@ newly hidden source documents are deleted before retrieval. OpenAI requests use
 `store: false`, structured answer output is validated, citations are limited to
 retrieved source keys, and usage logs contain only operational metadata rather
 than questions or source content.
+
+## Outcomes And Attribution
+
+Prompt 18 adds owner-confirmed interview, offer, and hired milestones. Creating
+an outcome requires the authenticated owner's application in that group and a
+matching current or historical tracker stage. Creation is always private and
+does not announce anything or award visible reputation. One milestone per
+subject, canonical job, and outcome type is enforced across groups by a unique
+index. Milestones remain self-reported, not employer-verified.
+
+Attribution is optional and resolved on the server: the earliest active,
+non-self job sharer predating the application, and a non-self referrer with a
+`referred` transition recorded by that referrer for the same requester, job,
+and group. Client-supplied recipient IDs are never trusted. Owners review the
+names before separately confirming attribution and consenting to group sharing.
+No salary, private notes, tracker history, or referral messages enter the
+outcome DTO. No automatic announcements or notification fan-out are performed.
+
+Sharing and withdrawal lock the outcome and atomically update visibility,
+append-only reputation evidence, summary deltas, and affected retrieval-index
+entries. Interview and hire credit use the existing reputation policy; offers
+do not introduce a new points category. A member who both shared and referred
+receives one credit per milestone. Repeated requests and re-sharing do not
+create duplicate evidence or increase points. Withdrawing consent makes the
+outcome private, removes its visible credit, and clears its search document.
+Reputation recalculation and contribution highlights exclude private outcomes;
+withdrawal does not erase the historical evidence or what members already saw.
+
+The tracker offers private milestone recording. `/app/groups/[groupSlug]/outcomes`
+defaults to the owner's records and has an explicit shared-with-group view.
+Server queries enforce membership, ownership, group scope, and current consent;
+admins receive no special access to private outcomes.

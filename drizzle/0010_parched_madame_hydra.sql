@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "outcomes_subject_job_type_unique" ON "outcomes" USING btree ("subject_user_id","job_id","outcome_type");

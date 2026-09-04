@@ -7,6 +7,10 @@ vi.mock("@/server/applications/actions", () => ({
   updateApplicationDetailsAction: vi.fn(),
   updateApplicationStatusAction: vi.fn(),
 }));
+vi.mock("@/server/outcomes/actions", () => ({
+  recordOutcomeAction: vi.fn(),
+  changeOutcomeVisibilityAction: vi.fn(),
+}));
 
 afterEach(cleanup);
 

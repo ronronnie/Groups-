@@ -89,8 +89,8 @@ describe("contribution reputation", () => {
          referred_by_user_id, outcome_type, visibility,
          consent_granted_at, shared_at
        ) values
-       ($1, $2, $3, $4, $4, $5, 'interview', 'group', now(), now()),
-       ($6, $2, $3, $4, $4, $5, 'hired', 'group', now(), now())`,
+       ($1, $2, $3, $4, $5, null, 'interview', 'group', now(), now()),
+       ($6, $2, $3, $4, $5, null, 'hired', 'group', now(), now())`,
       [
         ids.interviewOutcome,
         ids.group,

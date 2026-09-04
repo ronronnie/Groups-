@@ -5,17 +5,17 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 import { users } from "@/server/db/schema/auth";
 import { groups } from "@/server/db/schema/groups";
 import { jobs } from "@/server/db/schema/jobs";
 import { timestamps } from "@/server/db/schema/shared";
+import { outcomeTypes, type OutcomeType } from "@/domains/outcomes/outcome";
 
-const outcomeTypes = ["interview", "offer", "hired"] as const;
 const outcomeVisibilities = ["private", "group"] as const;
 
-type OutcomeType = (typeof outcomeTypes)[number];
 type OutcomeVisibility = (typeof outcomeVisibilities)[number];
 
 export const outcomes = pgTable(
@@ -49,6 +49,11 @@ export const outcomes = pgTable(
   (table) => [
     index("outcomes_group_created_idx").on(table.groupId, table.createdAt),
     index("outcomes_subject_user_idx").on(table.subjectUserId),
+    uniqueIndex("outcomes_subject_job_type_unique").on(
+      table.subjectUserId,
+      table.jobId,
+      table.outcomeType,
+    ),
     check(
       "outcomes_type_check",
       sql`${table.outcomeType} in ('interview', 'offer', 'hired')`,

@@ -1,5 +1,6 @@
 import { sql, type SQL } from "drizzle-orm";
 import { z } from "zod";
+import { visibleReputationEventSql } from "@/server/reputation/service";
 import {
   emptyReputationSummary,
   getContributionBadges,
@@ -252,9 +253,10 @@ export async function getGroupMemberOverview(
       event_type as "eventType",
       count(*)::int as count,
       sum(points)::int as points
-    from reputation_events
+    from reputation_events event
     where group_id = ${values.groupId}
       and recipient_user_id = ${values.memberId}
+      and ${visibleReputationEventSql}
     group by event_type
     order by sum(points) desc, event_type
   `);

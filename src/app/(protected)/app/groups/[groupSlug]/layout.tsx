@@ -1,4 +1,4 @@
-import { Handshake, Newspaper, Settings, Users } from "lucide-react";
+import { Handshake, Newspaper, Settings, Trophy, Users } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -54,6 +54,12 @@ export default async function ProtectedGroupLayout({
           </div>
           <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0 sm:justify-end">
             <AskGroupDialog groupId={group.id} groupSlug={group.slug} />
+            <Button asChild size="sm" variant="outline">
+              <Link href={`/app/groups/${group.slug}/outcomes`}>
+                <Trophy aria-hidden="true" className="size-4" />
+                Outcomes
+              </Link>
+            </Button>
             <Button asChild size="sm" variant="outline">
               <Link href={`/app/groups/${group.slug}/digest`}>
                 <Newspaper aria-hidden="true" className="size-4" />

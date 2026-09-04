@@ -7,6 +7,7 @@ import {
   LayoutGrid,
   List,
   LockKeyhole,
+  Trophy,
 } from "lucide-react";
 import Link from "next/link";
 import { StatusBadge } from "@/components/ui/badge";
@@ -20,6 +21,8 @@ import {
   type ApplicationTrackerView,
 } from "@/domains/applications/tracker";
 import { TrackerDetailsForm } from "@/features/applications/components/tracker-details-form";
+import { RecordOutcomeForm } from "@/features/outcomes/components/outcome-forms";
+import { outcomeStage, outcomeTypes } from "@/domains/outcomes/outcome";
 import { FeedActionButton } from "@/features/jobs/components/feed-action-button";
 import { cn } from "@/lib/utils";
 import { updateApplicationStatusAction } from "@/server/applications/actions";
@@ -129,6 +132,13 @@ function TrackerCard({
   groupId: string;
   groupSlug: string;
 }>) {
+  const milestones = outcomeTypes.filter(
+    (type) =>
+      application.status === outcomeStage[type] ||
+      application.timeline.some(
+        (event) => event.toStatus === outcomeStage[type],
+      ),
+  );
   return (
     <article className="rounded-lg border-2 border-border-strong bg-surface p-4 shadow-pop">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -207,6 +217,19 @@ function TrackerCard({
         />
       </details>
       <Timeline application={application} />
+      {milestones.length ? (
+        <details className="mt-4 border-t pt-4">
+          <summary className="flex cursor-pointer list-none items-center gap-2 font-secondary text-sm font-bold">
+            <Trophy aria-hidden="true" className="size-4" />
+            Record a milestone
+          </summary>
+          <RecordOutcomeForm
+            applicationId={application.id}
+            groupSlug={groupSlug}
+            milestones={milestones}
+          />
+        </details>
+      ) : null}
     </article>
   );
 }

@@ -292,6 +292,11 @@ describe("notifications and recipient digests", () => {
       summary: "A useful job was shared.",
     });
 
+    // Keep event timestamps inside the injected digest clock, not wall-clock time.
+    await client.query(
+      "update activity_events set created_at = '2026-09-04T11:00:00Z' where group_id = $1",
+      [ids.group],
+    );
     const digest = await getRecipientGroupDigest(execute, {
       groupId: ids.group,
       userId: ids.owner,

@@ -73,6 +73,17 @@ highlights may use only group-visible events. Private career preferences and
 application details can influence that recipient's matches and reminders but
 must never appear in shared activity or another member's digest.
 
+## Outcome Consent
+
+Milestones start private and are self-reported against the owner's tracker
+history. Sharing requires a separate, unchecked consent control and confirmation
+of the displayed attribution. Never infer consent from a tracker status change.
+Resolve attribution from existing shares and referrer-confirmed referral
+history, not arbitrary client-supplied member IDs. Keep sensitive tracker and
+referral fields out of outcome payloads. Private outcomes must not generate
+visible reputation; withdrawing sharing removes their visible credit while
+preserving append-only evidence. No automatic outcome announcements.
+
 ## Brand Configuration
 
 Working product labels must be centralized:
