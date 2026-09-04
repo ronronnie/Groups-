@@ -286,3 +286,19 @@ erDiagram
 - `npm run db:seed` loads local environment files and inserts idempotent fictional data.
 
 Migration `0000` enables pgvector before tables are created. Development seed data uses only `example.test` identities and URLs.
+
+## Ask This Group Retrieval
+
+Ask this Group uses a derived `group_knowledge_documents` pgvector index. The
+index is rebuilt incrementally from authoritative jobs, job shares, public job
+discussions, visible profile fields, consented group outcomes, and contribution
+summaries. Every document carries a `group_id`; membership is checked before
+source loading and again in the vector query.
+
+Private profile preferences and application notes are never indexed. A signed-in
+member's own saved-but-not-applied state may be loaded for a relevant question,
+but it remains request-local and is never written to the shared index. Removed or
+newly hidden source documents are deleted before retrieval. OpenAI requests use
+`store: false`, structured answer output is validated, citations are limited to
+retrieved source keys, and usage logs contain only operational metadata rather
+than questions or source content.

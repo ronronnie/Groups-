@@ -46,6 +46,20 @@ test("design system is responsive and keyboard accessible", async ({
     page.getByRole("dialog", { name: "Save this opportunity?" }),
   ).toBeHidden();
 
+  await page.getByRole("button", { name: "Ask", exact: true }).click();
+  const askDialog = page.getByRole("dialog", { name: "Ask this Group" });
+  await expect(askDialog).toBeVisible();
+  await expect(
+    askDialog.getByRole("textbox", { name: "What do you want to find?" }),
+  ).toBeFocused();
+  const askDialogBox = await askDialog.boundingBox();
+  expect(askDialogBox?.x).toBeGreaterThanOrEqual(0);
+  expect(
+    (askDialogBox?.x ?? 0) + (askDialogBox?.width ?? 0),
+  ).toBeLessThanOrEqual(320);
+  await page.keyboard.press("Escape");
+  await expect(askDialog).toBeHidden();
+
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.keyboard.press("Control+k");
   await expect(

@@ -7,4 +7,5 @@ export * from "@/server/db/schema/outcomes";
 export * from "@/server/db/schema/profiles";
 export * from "@/server/db/schema/referrals";
 export * from "@/server/db/schema/reputation";
+export * from "@/server/db/schema/search";
 export * from "@/server/db/schema/system";

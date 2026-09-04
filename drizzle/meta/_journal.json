@@ -57,6 +57,13 @@
       "when": 1788422735121,
       "tag": "0007_amazing_vapor",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1788450297773,
+      "tag": "0008_great_masque",
+      "breakpoints": true
     }
   ]
 }

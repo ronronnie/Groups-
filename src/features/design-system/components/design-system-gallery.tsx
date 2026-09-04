@@ -43,6 +43,7 @@ import { toast } from "@/components/ui/toaster";
 import { Tooltip } from "@/components/ui/tooltip";
 import { UserChip } from "@/components/ui/user-chip";
 import { AI_DISPLAY_NAME, APP_NAME } from "@/config/brand";
+import { AskGroupDialog } from "@/features/search/components/ask-group-dialog";
 import { cn } from "@/lib/utils";
 
 const navigation: NavigationItem[] = [
@@ -298,6 +299,10 @@ function DesignSystemGallery() {
         title="Overlays and feedback"
       >
         <div className="flex flex-wrap gap-3">
+          <AskGroupDialog
+            groupId="20000000-0000-4000-8000-000000000001"
+            groupSlug="component-preview"
+          />
           <Modal
             description="A focused confirmation surface for consequential actions."
             title="Save this opportunity?"

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/badge";
 import { getGroupEngineNavigation } from "@/domains/groups/registry";
 import { GroupNavigationShell } from "@/features/groups/components/group-navigation-shell";
+import { AskGroupDialog } from "@/features/search/components/ask-group-dialog";
 import { requireCurrentUser } from "@/server/auth/current-user";
 import { createGroupSqlExecutor } from "@/server/groups/database";
 import { getMemberGroupBySlug } from "@/server/groups/service";
@@ -52,6 +53,7 @@ export default async function ProtectedGroupLayout({
             </p>
           </div>
           <div className="flex w-full items-center gap-2 sm:w-auto sm:shrink-0">
+            <AskGroupDialog groupId={group.id} groupSlug={group.slug} />
             <Button asChild size="sm" variant="outline">
               <Link href={`/app/groups/${group.slug}/referrals`}>
                 <Handshake aria-hidden="true" className="size-4" />

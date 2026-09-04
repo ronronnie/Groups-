@@ -66,13 +66,23 @@ describe("database schema constraints", () => {
   });
 
   it("loads pgvector before the vector schema", async () => {
-    const result = await database.query<{ dimensions: number }>(
-      `select atttypmod as dimensions
+    const result = await database.query<{
+      tableName: string;
+      dimensions: number;
+    }>(
+      `select attrelid::regclass::text as "tableName", atttypmod as dimensions
        from pg_attribute
-       where attrelid = 'job_embeddings'::regclass and attname = 'embedding'`,
+       where attrelid in (
+         'job_embeddings'::regclass,
+         'group_knowledge_documents'::regclass
+       ) and attname = 'embedding'
+       order by attrelid::regclass::text`,
     );
 
-    expect(result.rows[0]?.dimensions).toBe(1536);
+    expect(result.rows).toEqual([
+      { tableName: "group_knowledge_documents", dimensions: 1536 },
+      { tableName: "job_embeddings", dimensions: 1536 },
+    ]);
   });
 
   it("allows only the supported jobs engine", async () => {
