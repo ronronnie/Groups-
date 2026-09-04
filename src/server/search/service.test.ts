@@ -18,6 +18,7 @@ import type { AiUsageEvent } from "@/server/ai/usage";
 const viewerId = "11000000-0000-4000-8000-000000000001";
 const outsiderId = "11000000-0000-4000-8000-000000000002";
 const groupId = "22000000-0000-4000-8000-000000000001";
+const otherGroupId = "22000000-0000-4000-8000-000000000002";
 const jobId = "33000000-0000-4000-8000-000000000001";
 
 function readMigrations() {
@@ -48,10 +49,12 @@ describe("Ask this Group service", () => {
       insert into users (id, name, email, email_verified) values
         ('${viewerId}', 'Viewer', 'ask-viewer@example.test', true),
         ('${outsiderId}', 'Outsider', 'ask-outsider@example.test', true);
-      insert into groups (id, name, slug, engine_key, owner_id)
-        values ('${groupId}', 'Search Group', 'search-group', 'jobs', '${viewerId}');
-      insert into group_memberships (group_id, user_id, role, status)
-        values ('${groupId}', '${viewerId}', 'owner', 'active');
+      insert into groups (id, name, slug, engine_key, owner_id) values
+        ('${groupId}', 'Search Group', 'search-group', 'jobs', '${viewerId}'),
+        ('${otherGroupId}', 'Other Search Group', 'other-search-group', 'jobs', '${outsiderId}');
+      insert into group_memberships (group_id, user_id, role, status) values
+        ('${groupId}', '${viewerId}', 'owner', 'active'),
+        ('${otherGroupId}', '${outsiderId}', 'owner', 'active');
       insert into jobs (id, canonical_url, company, title, description_summary, location, work_mode, skills, source)
         values ('${jobId}', 'https://search.example.test/job', 'Orbit Foundry', 'React Designer', 'Build accessible design systems', 'Remote', 'remote', '["React", "Accessibility"]', 'test');
       insert into job_shares (group_id, job_id, sharer_id)
@@ -93,6 +96,24 @@ describe("Ask this Group service", () => {
     const result = await askGroup(
       "Show remote React roles",
       { groupId, groupSlug: "search-group", userId: outsiderId },
+      values,
+    );
+
+    expect(result).toBeNull();
+    expect(embed).not.toHaveBeenCalled();
+    expect(answer).not.toHaveBeenCalled();
+  });
+
+  it("does not let a Group A member retrieve Group B data", async () => {
+    const answer = vi.fn<GroupAnswerRequest>();
+    const { embed, values } = dependencies(answer);
+    const result = await askGroup(
+      "Show me the jobs in this group",
+      {
+        groupId: otherGroupId,
+        groupSlug: "other-search-group",
+        userId: viewerId,
+      },
       values,
     );
 

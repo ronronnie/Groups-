@@ -5,6 +5,17 @@ export type AiUsageSqlExecutor = <Row extends Record<string, unknown>>(
   query: SQL,
 ) => Promise<{ rows: Row[] }>;
 
+const aiUsageMetadataSchema = z
+  .object({
+    status: z.enum(["success", "low_confidence", "invalid_output", "error"]),
+    attempt: z.number().int().positive().optional(),
+    inputKind: z.enum(["url", "text", "url_and_text"]).optional(),
+    confidence: z.number().min(0).max(1).optional(),
+    indexedSourceCount: z.number().int().min(0).optional(),
+    sourceCount: z.number().int().min(0).optional(),
+  })
+  .strict();
+
 export const aiUsageEventSchema = z.object({
   userId: z.string().uuid(),
   groupId: z.string().uuid(),
@@ -13,10 +24,7 @@ export const aiUsageEventSchema = z.object({
   promptTokens: z.number().int().min(0).nullable(),
   completionTokens: z.number().int().min(0).nullable(),
   requestId: z.string().trim().max(255).nullable(),
-  metadata: z.record(
-    z.string(),
-    z.union([z.string(), z.number(), z.boolean()]),
-  ),
+  metadata: aiUsageMetadataSchema,
 });
 
 export type AiUsageEvent = z.infer<typeof aiUsageEventSchema>;

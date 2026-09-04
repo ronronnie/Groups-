@@ -3,7 +3,11 @@
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { recordAiUsageEvent, type AiUsageSqlExecutor } from "@/server/ai/usage";
+import {
+  aiUsageEventSchema,
+  recordAiUsageEvent,
+  type AiUsageSqlExecutor,
+} from "@/server/ai/usage";
 
 describe("AI usage logging", () => {
   let client: PGlite;
@@ -65,5 +69,39 @@ describe("AI usage logging", () => {
       metadata: { status: "success", confidence: 0.9 },
     });
     expect(JSON.stringify(result.rows[0])).not.toContain("job description");
+  });
+
+  it("rejects prompt-like content fields from telemetry metadata", () => {
+    const baseEvent = {
+      userId: "10000000-0000-4000-8000-000000000001",
+      groupId: "20000000-0000-4000-8000-000000000001",
+      feature: "group_search_answer",
+      modelAlias: "test-model",
+      promptTokens: 50,
+      completionTokens: 25,
+      requestId: "resp_test",
+    };
+
+    for (const key of [
+      "prompt",
+      "rawQuestion",
+      "response",
+      "message",
+      "details",
+    ]) {
+      expect(
+        aiUsageEventSchema.safeParse({
+          ...baseEvent,
+          metadata: { status: "success", [key]: "private user content" },
+        }).success,
+      ).toBe(false);
+    }
+
+    expect(
+      aiUsageEventSchema.safeParse({
+        ...baseEvent,
+        metadata: { status: "success", sourceCount: 3, inputKind: "text" },
+      }).success,
+    ).toBe(true);
   });
 });

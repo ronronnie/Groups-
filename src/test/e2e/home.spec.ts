@@ -1,7 +1,10 @@
 import { expect, test } from "@playwright/test";
 
 test("home page and health endpoint are reachable", async ({ page }) => {
-  await page.goto("/");
+  const pageResponse = await page.goto("/");
+
+  expect(pageResponse?.headers()["x-content-type-options"]).toBe("nosniff");
+  expect(pageResponse?.headers()["x-frame-options"]).toBe("DENY");
 
   await expect(
     page.getByRole("heading", {
@@ -15,6 +18,20 @@ test("home page and health endpoint are reachable", async ({ page }) => {
     ok: true,
     app: "Groups",
   });
+});
+
+test("protected and group API responses are not cacheable", async ({
+  request,
+}) => {
+  const protectedResponse = await request.get("/app", { maxRedirects: 0 });
+  expect(protectedResponse.headers()["cache-control"]).toContain("no-store");
+  expect(protectedResponse.headers()["x-robots-tag"]).toBe("noindex, nofollow");
+
+  const groupApiResponse = await request.get(
+    "/api/groups/10000000-0000-4000-8000-000000000001/chat/token",
+  );
+  expect(groupApiResponse.status()).toBe(401);
+  expect(groupApiResponse.headers()["cache-control"]).toContain("no-store");
 });
 
 test("public pages have a useful not-found recovery state", async ({
