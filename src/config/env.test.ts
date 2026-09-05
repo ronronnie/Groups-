@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   validateAuthEnv,
@@ -18,6 +20,22 @@ const validEnv = {
   ABLY_API_KEY: "ably-api-key",
   NEXT_PUBLIC_APP_URL: "http://localhost:3000",
 };
+
+function parseEnvExample() {
+  return Object.fromEntries(
+    readFileSync(path.resolve(process.cwd(), ".env.example"), "utf8")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith("#"))
+      .map((line) => {
+        const separator = line.indexOf("=");
+        return [
+          line.slice(0, separator),
+          line.slice(separator + 1).replace(/^"|"$/g, ""),
+        ];
+      }),
+  );
+}
 
 describe("environment validation", () => {
   it("validates server configuration without exposing secrets as public env", () => {
@@ -44,6 +62,22 @@ describe("environment validation", () => {
       GOOGLE_CLIENT_ID: validEnv.GOOGLE_CLIENT_ID,
       GOOGLE_CLIENT_SECRET: validEnv.GOOGLE_CLIENT_SECRET,
       NEXT_PUBLIC_APP_URL: validEnv.NEXT_PUBLIC_APP_URL,
+    });
+  });
+
+  it("keeps the environment template complete and placeholder-only", () => {
+    const example = parseEnvExample();
+
+    expect(Object.keys(example).sort()).toEqual(Object.keys(validEnv).sort());
+    expect(example).toMatchObject({
+      DATABASE_URL: expect.stringContaining(
+        "user:password@host-pooler.neon.tech",
+      ),
+      BETTER_AUTH_SECRET: expect.stringContaining("replace-with"),
+      GOOGLE_CLIENT_ID: expect.stringContaining("replace-with"),
+      GOOGLE_CLIENT_SECRET: expect.stringContaining("replace-with"),
+      OPENAI_API_KEY: expect.stringContaining("replace-with"),
+      ABLY_API_KEY: expect.stringContaining("replace-with"),
     });
   });
 });

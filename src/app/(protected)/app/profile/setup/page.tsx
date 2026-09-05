@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { APP_NAME } from "@/config/brand";
 import { CareerProfileForm } from "@/features/profiles/components/career-profile-form";
 import { ProfileCompleteness } from "@/features/profiles/components/profile-completeness";
 import { requireCurrentUser } from "@/server/auth/current-user";
@@ -30,8 +31,8 @@ export default async function CareerProfileSetupPage() {
           Tell us what work fits you.
         </h1>
         <p className="font-secondary leading-7 text-muted-foreground">
-          Add your career details once. Groups can reuse the same summary while
-          your matching preferences stay private.
+          Add your career details once. {APP_NAME} can reuse the same summary
+          while your matching preferences stay private.
         </p>
         <ProfileCompleteness className="pt-3" value={profile.completeness} />
       </div>
