@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-test("home page and health endpoint are reachable", async ({ page }) => {
+test("home page gives people a clear path into the product", async ({
+  page,
+}) => {
   const pageResponse = await page.goto("/");
 
   expect(pageResponse?.headers()["x-content-type-options"]).toBe("nosniff");
@@ -8,9 +10,25 @@ test("home page and health endpoint are reachable", async ({ page }) => {
 
   await expect(
     page.getByRole("heading", {
-      name: /purpose-native groups, ready for implementation/i,
+      name: /find your next job with help from your people/i,
     }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Create your group" }),
+  ).toHaveAttribute("href", "/sign-up");
+  await expect(
+    page.getByRole("link", { name: "I already have an account" }),
+  ).toHaveAttribute("href", "/sign-in");
+  await expect(page.getByText("App Router")).toHaveCount(0);
+  await expect(page.getByText("Health endpoint")).toHaveCount(0);
+
+  await page.setViewportSize({ width: 320, height: 800 });
+  const hasHorizontalOverflow = await page.evaluate(
+    () =>
+      document.documentElement.scrollWidth >
+      document.documentElement.clientWidth,
+  );
+  expect(hasHorizontalOverflow).toBe(false);
 
   const response = await page.request.get("/api/health");
   await expect(response).toBeOK();
