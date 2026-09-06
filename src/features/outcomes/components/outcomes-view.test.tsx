@@ -118,7 +118,7 @@ describe("outcome UI", () => {
 
   it("requires fresh consent, names what is shared, and shows attribution before sharing", async () => {
     const user = userEvent.setup();
-    render(
+    const { rerender } = render(
       <OutcomesView
         outcomes={[outcome]}
         userId="candidate"
@@ -141,6 +141,20 @@ describe("outcome UI", () => {
     expect(await screen.findByRole("status")).toHaveTextContent(
       "Outcome shared with this group.",
     );
+    rerender(
+      <OutcomesView
+        outcomes={[{ ...outcome, visibility: "group" }]}
+        userId="candidate"
+        groupSlug="first"
+        scope="mine"
+      />,
+    );
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Outcome shared with this group.",
+    );
+    expect(
+      screen.getByRole("button", { name: "Make private" }),
+    ).toBeInTheDocument();
   });
 
   it("does not give other members sharing controls", () => {

@@ -4,11 +4,12 @@ import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import { vector } from "@electric-sql/pglite-pgvector";
-import type { SQL } from "drizzle-orm";
+import { sql, type SQL } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/pglite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   listAuthorizedKnowledgeSources,
+  upsertIndexedDocuments,
   type SearchSqlExecutor,
 } from "@/server/search/retrieval";
 
@@ -131,5 +132,61 @@ describe("Ask this Group retrieval boundaries", () => {
     });
 
     expect(sources).toEqual([]);
+  });
+
+  it("bulk upserts changed knowledge documents in one database call", async () => {
+    const embedding = [1, ...Array.from({ length: 1535 }, () => 0)];
+    let calls = 0;
+    const executeSpy: SearchSqlExecutor = async <
+      Row extends Record<string, unknown>,
+    >(
+      query: SQL,
+    ) => {
+      calls += 1;
+      return execute<Row>(query);
+    };
+
+    await upsertIndexedDocuments(executeSpy, [
+      {
+        groupId: ids.groupA,
+        modelAlias: "test-embedding",
+        source: {
+          key: `job:${ids.jobA}`,
+          kind: "job",
+          sourceId: ids.jobA,
+          title: "Product Designer",
+          content: "Accessible design systems",
+          href: `/jobs/${ids.jobA}`,
+        },
+        embedding,
+        contentHash: "hash-job",
+      },
+      {
+        groupId: ids.groupA,
+        modelAlias: "test-embedding",
+        source: {
+          key: `job-share:${ids.shareA}`,
+          kind: "job_share",
+          sourceId: ids.shareA,
+          title: "Shared Product Designer",
+          content: "Portfolio review available",
+          href: `/jobs/${ids.jobA}`,
+        },
+        embedding,
+        contentHash: "hash-share",
+      },
+    ]);
+    expect(calls).toBe(1);
+
+    const documents = await execute<{ sourceKey: string }>(sql`
+      select source_key as "sourceKey"
+      from group_knowledge_documents
+      where group_id = ${ids.groupA}
+      order by source_key
+    `);
+    expect(documents.rows.map((row) => row.sourceKey)).toEqual([
+      `job-share:${ids.shareA}`,
+      `job:${ids.jobA}`,
+    ]);
   });
 });

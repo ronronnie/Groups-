@@ -134,8 +134,13 @@ export function ReferralRequestPanel({
           </div>
         </>
       ) : (
-        <p className="font-secondary text-sm text-muted-foreground">
-          Your active requests for this job are available in the referral inbox.
+        <p
+          className={`font-secondary text-sm ${state.status === "success" ? "text-success-foreground" : "text-muted-foreground"}`}
+          role={state.status === "success" ? "status" : undefined}
+        >
+          {state.status === "success" && state.message
+            ? state.message
+            : "Your active requests for this job are available in the referral inbox."}
         </p>
       )}
     </form>

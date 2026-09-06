@@ -345,10 +345,26 @@ export async function pruneIndexedDocuments(
   `);
 }
 
-export async function upsertIndexedDocument(
+export async function upsertIndexedDocuments(
   execute: SearchSqlExecutor,
-  input: SourceEmbedding & { groupId: string; modelAlias: string },
+  inputs: Array<SourceEmbedding & { groupId: string; modelAlias: string }>,
 ) {
+  if (!inputs.length) return;
+  const rows = inputs.map(
+    (input) => sql`(
+    ${idSchema.parse(input.groupId)},
+    ${input.source.key},
+    ${input.source.kind},
+    ${idSchema.parse(input.source.sourceId)},
+    ${input.source.title},
+    ${input.source.content},
+    ${input.source.href},
+    ${JSON.stringify(input.embedding)}::vector,
+    ${input.modelAlias},
+    ${input.contentHash}
+  )`,
+  );
+
   await execute(sql`
     insert into group_knowledge_documents (
       group_id,
@@ -361,18 +377,7 @@ export async function upsertIndexedDocument(
       embedding,
       model_alias,
       content_hash
-    ) values (
-      ${idSchema.parse(input.groupId)},
-      ${input.source.key},
-      ${input.source.kind},
-      ${idSchema.parse(input.source.sourceId)},
-      ${input.source.title},
-      ${input.source.content},
-      ${input.source.href},
-      ${JSON.stringify(input.embedding)}::vector,
-      ${input.modelAlias},
-      ${input.contentHash}
-    )
+    ) values ${sql.join(rows, sql`, `)}
     on conflict (group_id, source_key) do update
     set
       source_kind = excluded.source_kind,

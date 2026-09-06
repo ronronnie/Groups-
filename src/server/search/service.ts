@@ -19,7 +19,7 @@ import {
   pruneIndexedDocuments,
   rankKnowledgeLexically,
   searchIndexedKnowledge,
-  upsertIndexedDocument,
+  upsertIndexedDocuments,
   type KnowledgeSource,
   type SearchSqlExecutor,
 } from "@/server/search/retrieval";
@@ -180,16 +180,22 @@ async function retrieveSources(
     const [questionEmbedding, ...sourceEmbeddings] = response.vectors;
     if (!questionEmbedding) throw new Error("Question embedding is missing.");
 
-    for (const [index, source] of changedSources.entries()) {
+    const indexedSources = changedSources.map((source, index) => {
       const embedding = sourceEmbeddings[index];
       if (!embedding) throw new Error("A source embedding is missing.");
-      await upsertIndexedDocument(execute, {
+      return {
         groupId: context.groupId,
         modelAlias: embeddingModel,
         source,
         embedding,
         contentHash: hashes.get(source.key)!,
-      });
+      };
+    });
+    for (let index = 0; index < indexedSources.length; index += 25) {
+      await upsertIndexedDocuments(
+        execute,
+        indexedSources.slice(index, index + 25),
+      );
     }
 
     await recordUsageSafely(

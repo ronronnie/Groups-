@@ -342,16 +342,23 @@ function ChatRoom({
 }
 
 function RealtimeGeneralChat(props: Readonly<GeneralChatProps>) {
-  const [clients] = useState<ChatClients>(() => {
+  const [clients, setClients] = useState<ChatClients | null>(null);
+
+  useEffect(() => {
     const realtime = new Ably.Realtime({
       authMethod: "GET",
       authUrl: `/api/groups/${props.groupId}/chat/token`,
     });
     const chat = new ChatClient(realtime, { logLevel: LogLevel.Error });
-    return { chat, realtime };
-  });
+    const activate = window.setTimeout(() => setClients({ chat, realtime }), 0);
 
-  useEffect(() => () => clients.realtime.close(), [clients]);
+    return () => {
+      window.clearTimeout(activate);
+      window.setTimeout(() => realtime.close(), 0);
+    };
+  }, [props.groupId]);
+
+  if (!clients) return <LoadingState label="Connecting to group chat" />;
 
   return (
     <ChatClientProvider client={clients.chat}>

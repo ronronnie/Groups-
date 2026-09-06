@@ -128,5 +128,5 @@ export async function acceptInviteAction(token: string) {
     ]);
   }
 
-  redirect(`/app/groups/${accepted.groupSlug}`);
+  redirect(`/app/groups/${accepted.groupSlug}/for-you`);
 }

@@ -1,14 +1,15 @@
 "use client";
 
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
 import type { ReactNode } from "react";
+import { useReducedMotionPreference } from "@/components/motion/use-reduced-motion-preference";
 import { cn } from "@/lib/utils";
 
 function PageTransition({
   children,
   className,
 }: Readonly<{ children: ReactNode; className?: string }>) {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReducedMotionPreference();
 
   return (
     <motion.div

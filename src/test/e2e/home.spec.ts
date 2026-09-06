@@ -133,6 +133,10 @@ test("design system is responsive and keyboard accessible", async ({
 test("reduced motion removes decorative transition durations", async ({
   page,
 }) => {
+  const consoleErrors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") consoleErrors.push(message.text());
+  });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/design-system");
 
@@ -148,4 +152,5 @@ test("reduced motion removes decorative transition durations", async ({
     );
 
   expect(durations.every((duration) => duration <= 1)).toBe(true);
+  expect(consoleErrors).toEqual([]);
 });

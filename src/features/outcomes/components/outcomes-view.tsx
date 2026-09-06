@@ -108,7 +108,6 @@ export function OutcomesView({
                   groupSlug={groupSlug}
                   outcomeId={outcome.id}
                   shared={outcome.visibility === "group"}
-                  key={`${outcome.id}-${outcome.visibility}`}
                 />
               ) : null}
             </article>
