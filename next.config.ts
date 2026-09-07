@@ -13,6 +13,27 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  async redirects() {
+    const configuredAppUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (!configuredAppUrl) return [];
+
+    const canonicalUrl = new URL(configuredAppUrl);
+    if (
+      process.env.NODE_ENV === "production" ||
+      canonicalUrl.hostname !== "localhost"
+    ) {
+      return [];
+    }
+
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "127.0.0.1" }],
+        destination: `${canonicalUrl.origin}/:path*`,
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [
       {

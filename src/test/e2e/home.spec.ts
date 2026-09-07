@@ -1,5 +1,22 @@
 import { expect, test } from "@playwright/test";
 
+test("local aliases redirect to the configured OAuth origin", async ({
+  request,
+}, testInfo) => {
+  const baseURL = testInfo.project.use.baseURL;
+  if (!baseURL) throw new Error("Playwright baseURL is required.");
+
+  const canonicalUrl = new URL("/sign-in", baseURL);
+  if (canonicalUrl.hostname !== "localhost") test.skip();
+
+  const aliasUrl = new URL(canonicalUrl);
+  aliasUrl.hostname = "127.0.0.1";
+  const response = await request.get(aliasUrl.toString(), { maxRedirects: 0 });
+
+  expect(response.status()).toBe(307);
+  expect(response.headers().location).toBe(canonicalUrl.toString());
+});
+
 test("home page gives people a clear path into the product", async ({
   page,
 }) => {

@@ -26,6 +26,9 @@ function buildAuth() {
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.BETTER_AUTH_URL,
     trustedOrigins: [env.NEXT_PUBLIC_APP_URL],
+    onAPIError: {
+      errorURL: "/sign-in",
+    },
     database: drizzleAdapter(database, {
       provider: "pg",
       schema,

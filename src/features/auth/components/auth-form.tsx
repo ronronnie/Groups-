@@ -18,15 +18,18 @@ import { authClient } from "@/lib/auth-client";
 type AuthFormProps = {
   mode: "sign-in" | "sign-up";
   callbackPath: string;
+  initialError?: string;
 };
 
 function fieldError(message: string | undefined) {
   return message ? <p className="text-sm text-destructive">{message}</p> : null;
 }
 
-export function AuthForm({ mode, callbackPath }: AuthFormProps) {
+export function AuthForm({ mode, callbackPath, initialError }: AuthFormProps) {
   const router = useRouter();
-  const [formError, setFormError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(
+    initialError ?? null,
+  );
   const [isGooglePending, setIsGooglePending] = useState(false);
   const isSignUp = mode === "sign-up";
   const form = useForm<{ name: string; email: string; password: string }>({

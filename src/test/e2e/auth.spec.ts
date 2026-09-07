@@ -23,6 +23,22 @@ test("authentication pages expose the required methods", async ({ page }) => {
   await expect(page.getByLabel("Password")).toBeVisible();
 });
 
+test("OAuth errors return to Groups with a useful retry message", async ({
+  page,
+}) => {
+  await page.goto("/sign-in?error=state_mismatch");
+
+  await expect(
+    page.getByText(
+      "Your Google sign-in session expired or started on a different address. Please try again.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Continue with Google" }),
+  ).toBeEnabled();
+});
+
 test("sign up stays usable at 320px with keyboard navigation", async ({
   page,
 }) => {
